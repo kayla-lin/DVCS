@@ -1,4 +1,4 @@
-pub mod StagingStorage {
+pub mod staging_storage {
     use serde::{Deserialize, Serialize};
     use serde_json;
     use sha1::{Digest, Sha1};
@@ -244,7 +244,7 @@ pub mod StagingStorage {
                             Self::recursive_file_traversal(self, new_directory, kind);
                         } else if attributes.is_file() {
                             // * Recursive call of all files in directory
-                            self.add_staged_data(attributes, &file_path, 0);
+                            self.add_staged_data(attributes, &file_path, kind);
                         }
                     }
                 }
@@ -313,7 +313,7 @@ pub mod StagingStorage {
                 String::from("./src/working-directory"),
             )
             .unwrap();
-            staging.print_staging_snapshot();
+            //staging.print_staging_snapshot();
             let file = staging
                 .add_file_to_staging("./src/working-directory/folder 1/test2.txt".to_string());
             assert_eq!(file.is_some(), true);
@@ -349,7 +349,7 @@ pub mod StagingStorage {
         }
 
         #[test]
-        // *  Successfully repository version
+        // *  Successfully set the repository version of the snapshot
         fn test_set_staging_snapshot_repository() {
             let mut staging = Staging::new(
                 String::from("./src/repo"),
@@ -360,13 +360,13 @@ pub mod StagingStorage {
         }
 
         #[test]
-        // *  Successfully repository version
+        // *  Successfully set the working directory version of the snapshot
         fn test_set_staging_snapshot_working_directory() {
             let mut staging = Staging::new(
                 String::from("./src/repo"),
                 String::from("./src/working-directory"),
             );
-            staging.as_mut().unwrap().set_staging_snapshot(1); // 1 = repository version
+            staging.as_mut().unwrap().set_staging_snapshot(1); // 1 = working directory
             assert_eq!(staging.as_ref().is_ok(), true);
         }
 
