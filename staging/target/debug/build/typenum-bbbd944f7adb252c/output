@@ -1,2 +1,0 @@
-cargo:rustc-env=TYPENUM_BUILD_CONSTS=/Users/kaylalin/Documents/CSC 253/staging/target/debug/build/typenum-bbbd944f7adb252c/out/consts.rs
-cargo:rustc-env=TYPENUM_BUILD_OP=/Users/kaylalin/Documents/CSC 253/staging/target/debug/build/typenum-bbbd944f7adb252c/out/op.rs
