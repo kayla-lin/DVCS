@@ -1,5 +1,3 @@
-mod stager;
-
 use staging::*;
 
 fn main() {
