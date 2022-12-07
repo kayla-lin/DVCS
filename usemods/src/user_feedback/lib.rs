@@ -1,13 +1,12 @@
+pub mod user_feedback{
 
-    
-    use colored::Colorize;
-    //display all errors
-    use rand::prelude::*;
-    extern crate colored;
-    use std::io;
-    use std::io::prelude::*;
+use colored::Colorize;
+use rand::prelude::*;
+extern crate colored;
+use std::io;
+use std::io::prelude::*;
 
-    pub fn display_all_errors(errors: Vec<String>) {
+pub fn display_all_errors(errors: Vec<String>) {
         
         //errors to iterator
         let error_inter: Vec<String> =  errors.into_iter().collect();
@@ -19,14 +18,16 @@
 
     }
 
-    pub fn display_first_error(errors: Vec<String>) {
+pub fn display_first_error(errors: Vec<String>) {
         println!("{}", errors[0].red());
     }
-    //function for missing arguments 
-    pub fn format_error_alt(errors: Vec<String>) {
-        //#print every 3 errors and display more when user enters
+    
+    
+pub fn format_error_alt(errors: Vec<String>) {
+        //print every 3 errors and display more when user enters
         
         let mut length = errors.len();
+        
         fn pause() {
             let mut stdin = io::stdin();
             let mut stdout = io::stdout();
@@ -44,11 +45,9 @@
             
             error.to_vec().iter().for_each(|error| println!("{}", error.truecolor(rng.gen(), rng.gen(), rng.gen())));
             pause();
-
-
-            
         });
 
     }
 
 
+}
