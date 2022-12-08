@@ -1,9 +1,15 @@
+use std::fs;
 use staging::*;
-use usemods::*;
+use usemods::{*, user_interaction::init_in};
+use std::fs::File;
 
 
 fn main() {
     println!("Hello, world!");
-    let a = user_interaction::user_interaction::add_in(String::from("/tmp/one"));
+    const DVCS_HIDDEN:&str = "/tmp/dvcs_team";
+    fs::create_dir(DVCS_HIDDEN);
+    fs::create_dir("/tmp/dvcs_testi/");
+    let file = File::create("/tmp/dvcs_testi/");
+    
    
 }
