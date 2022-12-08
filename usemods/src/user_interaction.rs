@@ -1,10 +1,19 @@
-pub mod user_interaction{
-    use crate::stager; 
 
-    pub fn diff(file_path: String, head: String) -> Result<String, Vec<String>> {
-        return stager::diff(file_path, head);
+pub mod user_interaction{
+    use stager; 
+
+    pub fn remove_in(file_path: String) -> Result<bool, Vec<String>> {
+        return Ok(stager::stager::remove(file_path)); 
     }
-    pub fn remove(file_path: String) -> Result<bool, Vec<String>> {
-        return stager::remove(file_path).map_err(|e| vec![e]);
+
+    pub fn status_in(file_path: String) -> Result<String, Vec<String>> {
+        return stager::stager::status(file_path).map_err(|e| vec![e]);
     }
+    pub fn add_in(file_path: String) -> Result<bool, Vec<String>> {
+        return Ok(stager::stager::add(file_path));
+    }
+
+    
+
+
 }

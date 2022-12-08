@@ -10,5 +10,7 @@ colored = "2.0.0"
 serde = { version = "1.0.13", features = ["derive"] }
 rand = "0.8.4"
 clap = { version = "4.0.29", features = ["derive"] }
+stager = {path = "../stager"}
+staging = {path = "../staging"}
 
 

@@ -2,7 +2,6 @@ pub mod user_feedback{
 
 use colored::Colorize;
 use rand::prelude::*;
-extern crate colored;
 use std::io;
 use std::io::prelude::*;
 

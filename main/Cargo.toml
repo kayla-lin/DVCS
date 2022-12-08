@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 staging = { path = "../staging" }
 stager = { path = "../stager" }
+usemods = { path = "../usemods" }
+
