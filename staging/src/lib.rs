@@ -82,8 +82,9 @@ pub mod staging_storage {
                     // * Creating index file if it doesn't exist already
                     let index_path = &(dvcs_hidden.to_owned() + "/index.json");
                     if !Path::new(index_path).exists() {
-                        File::create(&(dvcs_hidden.to_owned() + "/index.json"))
-                            .or_else(|_| return Err("Could not create index file".to_string()));
+                        if File::create(&(dvcs_hidden.to_owned() + "/index.json")).is_err() {
+                            return Err("Could not create index file".to_string());
+                        }
                     }
                     // * Read index file and load the staging index structure
                     // * Returning successful staging structure if read succussfully, otherwise returns new staging
@@ -259,7 +260,16 @@ pub mod staging_storage {
         }
 
         // *  Private helper function to go through all files in repository minus the DVCS hidden folder
-        fn recursive_file_traversal(&mut self, starting_directory: String, kind: i32) {
+        fn recursive_file_traversal(
+            &mut self,
+            starting_directory: String,
+            kind: i32,
+        ) -> Result<(), String> {
+            if !Path::new(&starting_directory).exists() {
+                return Err("Starting directory does not exist".to_string());
+            }
+
+            // * Check starting_directory is a valid path
             for entry in fs::read_dir(starting_directory).unwrap() {
                 let path_buffer = entry.unwrap().path();
                 let file_path = path_buffer.display().to_string();
@@ -281,6 +291,7 @@ pub mod staging_storage {
                     }
                 }
             }
+            return Ok(());
         }
 
         /**
