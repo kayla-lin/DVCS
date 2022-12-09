@@ -106,15 +106,11 @@ pub mod user_interaction{
         
     }
 
-    pub fn init_in(file_path: String) -> Result<bool, Box<dyn Any + Send>> {
+    pub fn init_in(file_path: String) -> bool {
         let init_res: Result<bool, Box<dyn Any + Send>> = panic::catch_unwind(|| {
             return stager::stager::init(file_path);
         });
 
-        return init_res;
-
-
-/* 
         if init_res.is_ok() {
             print!("Success in init!");
             return init_res.unwrap();
@@ -123,6 +119,7 @@ pub mod user_interaction{
             //read console input
             //match input to error function
             
+
             let errchoice = std::io::stdin();
             let err = init_res.unwrap_err().downcast::<String>().unwrap().to_string();
             print!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
@@ -148,7 +145,7 @@ pub mod user_interaction{
                 }
             }
             return false;
-        } */
+        }
     }
 
 
