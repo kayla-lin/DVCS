@@ -54,6 +54,10 @@ pub mod user_feedback{
 
 pub mod user_interaction{
     use stager; 
+    use std::{panic, any::Any, io::Stdout};
+
+    use crate::user_feedback::{display_first_error, display_all_errors, format_error_alt};
+
 
     pub fn remove_in(file_path: String) -> Result<bool, Vec<String>> {
         return Ok(stager::stager::remove(file_path)); 
@@ -62,12 +66,91 @@ pub mod user_interaction{
     pub fn status_in(file_path: String) -> Result<String, Vec<String>> {
         return stager::stager::status(file_path).map_err(|e| vec![e]);
     }
-    pub fn add_in(file_path: String) -> Result<bool, Vec<String>> {
-        return Ok(stager::stager::add(file_path));
+    pub fn add_in(file_path: String) -> bool {
+        let res:Result<bool, Box<dyn Any + Send>> = panic::catch_unwind(|| {
+            return stager::stager::add(file_path); 
+        });
+        if res.is_ok() {
+            print!("There is no error");
+            return res.unwrap();
+        } else {
+            print!("There is an error, which error function do you want to use?");
+            //read console input
+            //match input to error function
+            
+            let errchoice = std::io::stdin();
+            print!("1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
+            let mut input = String::new();
+            let errfn = errchoice.read_line(&mut input).unwrap();
+            
+            match errfn {
+                1 => {
+                    //display first error
+                    display_first_error(vec![res.unwrap_err().downcast::<String>().unwrap().to_string()]);
+                }
+                2 => {
+                    //display all errors
+                    display_all_errors(vec![res.unwrap_err().downcast::<String>().unwrap().to_string()]);
+                }
+                3 => {
+                    //display errors in chunks
+                    format_error_alt(vec![res.unwrap_err().downcast::<String>().unwrap().to_string()]);
+                }
+                _ => {
+                    //display first error
+                    display_all_errors(vec![res.unwrap_err().downcast::<String>().unwrap().to_string()]);
+                }
+            }
+            return false;
+        }
+        
     }
 
-    pub fn init_in(file_path: String) -> bool {
-        return stager::stager::init(file_path); 
+    pub fn init_in(file_path: String) -> Result<bool, Box<dyn Any + Send>> {
+        let init_res: Result<bool, Box<dyn Any + Send>> = panic::catch_unwind(|| {
+            return stager::stager::init(file_path);
+        });
+
+        return init_res;
+
+
+/* 
+        if init_res.is_ok() {
+            print!("Success in init!");
+            return init_res.unwrap();
+        } else {
+            print!("There is an error, which error function do you want to use?");
+            //read console input
+            //match input to error function
+            
+            let errchoice = std::io::stdin();
+            let err = init_res.unwrap_err().downcast::<String>().unwrap().to_string();
+            print!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
+            let mut input = String::new();
+            let errfn = errchoice.read_line(&mut input).unwrap();
+            
+            match errfn {
+                1 => {
+                    //display first error
+                    display_first_error(vec![err]);
+                }
+                2 => {
+                    //display all errors
+                    display_all_errors(vec![err]);
+                }
+                3 => {
+                    //display errors in chunks
+                    format_error_alt(vec![err]);
+                }
+                _ => {
+                    //display first error
+                    display_all_errors(vec![err]);
+                }
+            }
+            return false;
+        } */
     }
+
+
 
 }
