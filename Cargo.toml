@@ -5,4 +5,5 @@ members = [
     "staging",
     "main",
     "usemods"
+    "repo_directory_hiding"
 ]
