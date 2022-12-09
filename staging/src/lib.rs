@@ -129,14 +129,14 @@ pub mod staging_storage {
          */
         pub fn remove_file_from_staging(&mut self, file_path: &str) -> Result<(), String> {
             match self.get_file_from_staging(file_path).to_owned() {
-                Some(_) => {
+                Ok(_) => {
                     self.index.entry(file_path.to_string()).and_modify(|e| {
                         e.staging = None; // * Save struct in file
                     });
                     self.write_to_staging_file()
                         .or_else(|_| return Err("Cannot find file to remove".to_string()))
                 }
-                None => Err("Cannot find file to remove".to_string()),
+                Err(_) => Err("Cannot find file to remove".to_string()),
             }
         }
         /**
@@ -145,12 +145,12 @@ pub mod staging_storage {
         pub fn get_file_from_staging(
             &mut self,
             file_path: &str,
-        ) -> Option<(&String, &StagedComparison)> {
+        ) -> Result<(&String, &StagedComparison), String> {
             let file = self.index.get_key_value(file_path);
-            if file.is_some() {
-                return file;
+            match file {
+                Some(file) => Ok(file),
+                None => Err("No file found in staging index".to_string()),
             }
-            return None;
         }
 
         /**
@@ -411,7 +411,7 @@ pub mod staging_storage {
             let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
             staging.add_file_to_staging("./src/working-directory/folder 1/test2.txt");
             let file = staging.get_file_from_staging("./src/working-directory/folder 1/test2.txt");
-            assert_eq!(file.is_some(), true);
+            assert_eq!(file.is_ok(), true);
         }
 
         #[test]
@@ -419,7 +419,7 @@ pub mod staging_storage {
         fn get_file_from_staging_fail() {
             let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
             let file = staging.get_file_from_staging("./src/working-directory/folder 1/test2.xyz");
-            assert_eq!(file.is_none(), true);
+            assert_eq!(file.is_err(), true);
         }
     }
 }
