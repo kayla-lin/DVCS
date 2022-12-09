@@ -64,9 +64,10 @@ pub fn init(file_path: String) -> bool {
     if file_path.is_empty() {
         return false;
     } else {
+        println!("Initializing repository in {}", file_path);
         let staging = Staging::new(
-            String::from(DVCS_HIDDEN),
-            String::from(file_path),
+            &String::from(DVCS_HIDDEN),
+            &String::from(file_path),
         );
         if staging.is_ok() {
             staging.unwrap().set_staging_snapshot(1); // 1 = working directory

@@ -112,7 +112,7 @@ pub mod user_interaction{
         });
 
         if init_res.is_ok() {
-            print!("Success in init!");
+            print!("Success!");
             return init_res.unwrap();
         } else {
             print!("There is an error, which error function do you want to use?");
