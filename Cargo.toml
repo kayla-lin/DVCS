@@ -1,6 +1,8 @@
 [workspace]
 
 members = [
+    "stager",
     "staging",
     "main",
+    "usemods"
 ]
