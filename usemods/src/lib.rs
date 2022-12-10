@@ -105,48 +105,51 @@ pub mod user_interaction{
     } */
 
     pub fn init_in(file_path: String) -> bool {
-        let res = Path::new(&file_path).try_exists().unwrap_or_else(|_| false); 
+        //let res = Path::new(&file_path).try_exists().unwrap_or_else(|_| false); 
+        match Path::new(&file_path).try_exists().unwrap_or_else(|_| false) {
+            true => {
+                println!("File exists, initializing..."); 
+                stager::stager::init(file_path);
+                return true;
+            },
+            false => {
+                println!("Error!");
+                println!("Which error function do you want to use?");
+                //read console input
+                //match input to error function
+
+                let errchoice = std::io::stdin();
+                println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
+                let mut input = String::new();
+                let errfn = errchoice.read_line(&mut input).unwrap();
         
-        if res{
-            println!("File exists, initializing..."); 
-            stager::stager::init(file_path);
-            return true;
-
-        } else {
-            println!("Error!");
-            println!("Which error function do you want to use?");
-            //read console input
-            //match input to error function
-
-            let errchoice = std::io::stdin();
-            println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
-            let mut input = String::new();
-            let errfn = errchoice.read_line(&mut input).unwrap();
-    
-            let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
-            
-            match errfn {
-                1 => {
-                    //display first error
-                    display_first_error(vec![t_er]);
-                }
-                2 => {
-                    //display all errors
+                let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
+                match errfn {
+                    1 => {
+                        //display first error
+                        display_first_error(vec![t_er]);
+                        return false;
+                    }
+                    2 => {
+                        //display all errors
+                        display_all_errors(vec![t_er]);
+                        return false;
+                    }
+                    3 => {
+                        //display errors in chunks
+                        format_error_alt(vec![t_er]);
+                        return false;
+                    }
+                    _ => {
+                        //display first error
                     display_all_errors(vec![t_er]);
+                    return false;
+                    },
                 }
-                3 => {
-                    //display errors in chunks
-                    format_error_alt(vec![t_er]);
-                }
-                _ => {
-                    //display first error
-                    display_all_errors(vec![t_er]);
-                }
-            }
-
-            return false;
+            },
         }
     }
+}
 
    /*  pub fn diff_in(file_path: String, head: String) -> bool {
         
@@ -165,4 +168,4 @@ pub mod user_interaction{
 
 
 
-}
+
