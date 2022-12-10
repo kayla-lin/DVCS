@@ -10,7 +10,8 @@ pub mod staging_storage {
     use std::path::Path;
     use std::time::SystemTime;
 
-    #[derive(Debug, Serialize, Deserialize)]
+    /// Structure that keeps relevant metadata and the sha1 hash of the file/folder
+    #[derive(Debug, Serialize, Deserialize, Clone)]
     pub struct StagedData {
         path: String,
         modified: String,
@@ -22,7 +23,8 @@ pub mod staging_storage {
         sha1: String,
     }
 
-    #[derive(Debug, Serialize, Deserialize)]
+    /// Structure that holds metadata for working directory and repository snapshot as well as the files that are being staged
+    #[derive(Debug, Serialize, Deserialize, Clone)]
     pub struct StagedComparison {
         working_directory: Option<StagedData>,
         staging: Option<StagedData>,
@@ -82,8 +84,9 @@ pub mod staging_storage {
                     // * Creating index file if it doesn't exist already
                     let index_path = &(dvcs_hidden.to_owned() + "/index.json");
                     if !Path::new(index_path).exists() {
-                        File::create(&(dvcs_hidden.to_owned() + "/index.json"))
-                            .or_else(|_| return Err("Could not create index file".to_string()));
+                        if File::create(&(dvcs_hidden.to_owned() + "/index.json")).is_err() {
+                            return Err("Could not create index file".to_string());
+                        }
                     }
                     // * Read index file and load the staging index structure
                     // * Returning successful staging structure if read succussfully, otherwise returns new staging
@@ -100,33 +103,71 @@ pub mod staging_storage {
             };
         }
 
-        /**
-         * Add file to staging struct
-         */
+        /// Updates the status of staged files that are previously added in order to get most recent snapshot of the tracked file
+        pub fn update_staged_files(&mut self) -> Result<(), String> {
+            let values: Vec<StagedComparison> = self.index.clone().into_values().collect();
+            for val in values.iter() {
+                let staging = val.staging.as_ref();
+                // * Will update staged data / replace files that cannot be found as null
+                if staging.is_some() {
+                    if self
+                        .add_staged_data(&staging.unwrap().path, 0, true)
+                        .is_ok()
+                    {
+                        return self.write_to_staging_file();
+                    } else {
+                        return Err("Could not update staging file with new data".to_string());
+                    }
+                }
+            }
+            return Ok(());
+        }
+
+        /// Private function that deletes index file and creates new one
+        fn update_index_file(dvcs_hidden: &str) -> Result<(), String> {
+            match Path::new(&dvcs_hidden).exists() {
+                // * Repository cannot be found with given dvcs hidden path
+                false => return Err("Could not find working directory files".to_string()),
+                true => {
+                    // * Creating index file if it doesn't exist already
+                    let index_path = &(dvcs_hidden.to_owned() + "/index.json");
+                    if !Path::new(index_path).exists() {
+                        if File::create(&(dvcs_hidden.to_owned() + "/index.json")).is_err() {
+                            return Err("Could not create index file".to_string());
+                        }
+                    } else {
+                        if fs::remove_file(index_path).is_err() {
+                            return Err("Error creating new index file".to_string());
+                        }
+                        if File::create(&(dvcs_hidden.to_owned() + "/index.json")).is_err() {
+                            return Err("Could not create index file".to_string());
+                        }
+                    }
+                    Ok(())
+                }
+            }
+        }
+
+        /// Add file to staging structure
         pub fn add_file_to_staging(
             &mut self,
             file_path: &str,
         ) -> Result<Option<StagedData>, String> {
             // * Path to file
-            match fs::metadata(file_path.clone()) {
-                // * Add data given metadata, filepath
-                Ok(attributes) => match self.add_staged_data(attributes, file_path, 0) {
-                    Ok(file) => {
-                        // * Check to see if writing to file was a success
-                        if self.write_to_staging_file().is_err() {
-                            return Err("Could not write to staging file".to_string());
-                        }
-                        return Ok(file);
+            // * Add data given metadata, filepath
+            match self.add_staged_data(file_path, 0, false) {
+                Ok(file) => {
+                    // * Check to see if writing to file was a success
+                    if self.write_to_staging_file().is_err() {
+                        return Err("Could not write to staging file".to_string());
                     }
-                    Err(_) => Err("File does not exist to add".to_string()),
-                },
-                Err(_) => Err("Could not find file to add".to_string()),
+                    return Ok(file);
+                }
+                Err(_) => Err("File does not exist to add".to_string()),
             }
         }
 
-        /**
-         * Remove file to staging struct
-         */
+        /// Remove file from staging structure
         pub fn remove_file_from_staging(&mut self, file_path: &str) -> Result<(), String> {
             match self.get_file_from_staging(file_path).to_owned() {
                 Ok(_) => {
@@ -161,7 +202,7 @@ pub mod staging_storage {
             self.write_to_staging_file()
         }
 
-        // * Private helper function to get nano seconds out of SystemTime structure
+        /// Private helper function to get nano seconds out of SystemTime structure
         fn get_time_from_metadata(time: SystemTime) -> u128 {
             return time
                 .duration_since(SystemTime::UNIX_EPOCH)
@@ -169,7 +210,7 @@ pub mod staging_storage {
                 .as_nanos();
         }
 
-        // * Private helper function to get all useful metadata from file for indexing
+        /// Private helper function to get all useful metadata from file for indexing
         fn create_staged_data_struct(metadata: Metadata, sha1: String, path: String) -> StagedData {
             StagedData {
                 modified: Self::get_time_from_metadata(metadata.created().unwrap()).to_string(),
@@ -183,7 +224,7 @@ pub mod staging_storage {
             }
         }
 
-        // * Private helper function to convert file contents to sha1 hex hash
+        /// Private helper function to convert file contents to sha1 hex hash
         fn create_sha_1_hex(file_path: String) -> String {
             // * Sha1 hash object into bytes
             let mut hasher = Sha1::new();
@@ -194,98 +235,138 @@ pub mod staging_storage {
             hex::encode(result)
         }
 
-        // * Private helper function that creates the data being stored & puts it in the corresponding kind
+        /// Private helper function that creates the data being stored & puts it in the corresponding kind
+        /// TODO: error check
         fn add_staged_data(
             &mut self,
-            metadata: Metadata,
             file_path: &str,
             kind: i32,
+            add_nulls: bool,
         ) -> Result<Option<StagedData>, String> {
-            // * Creating hex sha1 hash of the contents
-            let sha1_hex_encode = Self::create_sha_1_hex(file_path.to_string());
+            // * Get metadata
+            let attrib_result = fs::metadata(file_path.clone());
+            match attrib_result {
+                Ok(metadata) => {
+                    // * Creating hex sha1 hash of the contents
+                    let sha1_hex_encode = Self::create_sha_1_hex(file_path.to_string());
 
-            // * Creating the struct with file path, metadata and sha1 hashed contents
-            let data = Self::create_staged_data_struct(
-                metadata.clone(),
-                sha1_hex_encode.clone(),
-                file_path.to_string(),
-            );
+                    // * Creating the struct with file path, metadata and sha1 hashed contents
+                    let data = Self::create_staged_data_struct(
+                        metadata.clone(),
+                        sha1_hex_encode.clone(),
+                        file_path.to_string(),
+                    );
 
-            self.index
-                .entry(file_path.to_string())
-                .and_modify(|e| match kind {
-                    0 => e.staging = Some(data),
-                    1 => e.working_directory = Some(data),
-                    2 => e.repository_version = Some(data),
-                    _ => panic!("Wrong snapshot type given"), // * Function for internal use only
-                })
-                .or_insert({
-                    match kind {
-                        0 => StagedComparison {
-                            working_directory: None,
-                            staging: Some(Self::create_staged_data_struct(
-                                metadata.clone(),
-                                sha1_hex_encode.clone(),
-                                file_path.to_string(),
-                            )),
-                            repository_version: None,
-                        },
-                        1 => StagedComparison {
-                            working_directory: Some(Self::create_staged_data_struct(
-                                metadata.clone(),
-                                sha1_hex_encode.clone(),
-                                file_path.to_string(),
-                            )),
-                            staging: None,
-                            repository_version: None,
-                        },
-                        2 => StagedComparison {
-                            working_directory: None,
-                            staging: None,
-                            repository_version: Some(Self::create_staged_data_struct(
-                                metadata.clone(),
-                                sha1_hex_encode.clone(),
-                                file_path.to_string(),
-                            )),
-                        },
-                        _ => return Err("Wrong kind of snapshot given, use (1-3)".to_string()),
+                    self.index
+                        .entry(file_path.to_string())
+                        .and_modify(|e| match kind {
+                            0 => e.staging = Some(data),
+                            1 => e.working_directory = Some(data),
+                            2 => e.repository_version = Some(data),
+                            _ => panic!("Wrong snapshot type given"), // * Function for internal use only
+                        })
+                        .or_insert({
+                            match kind {
+                                0 => StagedComparison {
+                                    working_directory: None,
+                                    staging: Some(Self::create_staged_data_struct(
+                                        metadata.clone(),
+                                        sha1_hex_encode.clone(),
+                                        file_path.to_string(),
+                                    )),
+                                    repository_version: None,
+                                },
+                                1 => StagedComparison {
+                                    working_directory: Some(Self::create_staged_data_struct(
+                                        metadata.clone(),
+                                        sha1_hex_encode.clone(),
+                                        file_path.to_string(),
+                                    )),
+                                    staging: None,
+                                    repository_version: None,
+                                },
+                                2 => StagedComparison {
+                                    working_directory: None,
+                                    staging: None,
+                                    repository_version: Some(Self::create_staged_data_struct(
+                                        metadata.clone(),
+                                        sha1_hex_encode.clone(),
+                                        file_path.to_string(),
+                                    )),
+                                },
+                                _ => {
+                                    return Err(
+                                        "Wrong kind of snapshot given, use (1-3)".to_string()
+                                    )
+                                }
+                            }
+                        });
+                    return Ok(Some(Self::create_staged_data_struct(
+                        metadata.clone(),
+                        sha1_hex_encode.clone(),
+                        file_path.to_string(),
+                    )));
+                }
+                // * If file cannot be found set the index as a blank
+                Err(_) => {
+                    if add_nulls {
+                        self.index
+                            .entry(file_path.to_string())
+                            .and_modify(|e| match kind {
+                                0 => e.staging = None,
+                                1 => e.working_directory = None,
+                                2 => e.repository_version = None,
+                                _ => panic!("Wrong snapshot type given"), // * Function for internal use only
+                            });
+                        return Ok(None);
                     }
-                });
-            return Ok(Some(Self::create_staged_data_struct(
-                metadata.clone(),
-                sha1_hex_encode.clone(),
-                file_path.to_string(),
-            )));
-        }
-
-        // *  Private helper function to go through all files in repository minus the DVCS hidden folder
-        fn recursive_file_traversal(&mut self, starting_directory: String, kind: i32) {
-            for entry in fs::read_dir(starting_directory).unwrap() {
-                let path_buffer = entry.unwrap().path();
-                let file_path = path_buffer.display().to_string();
-                // * Loops through all files, not the DVCS hidden one
-                if !file_path.contains(&self.dvcs_hidden) {
-                    let attrib_result = fs::metadata(file_path.clone());
-                    if attrib_result.is_ok() {
-                        let attributes = attrib_result.unwrap();
-                        if attributes.is_dir() {
-                            // * Recursive call of all files in directory
-                            let new_directory = file_path.clone();
-                            self.add_staged_data(attributes, &file_path, kind);
-                            // * Adds file to staging struct
-                            Self::recursive_file_traversal(self, new_directory, kind);
-                        } else if attributes.is_file() {
-                            // * Recursive call of all files in directory
-                            self.add_staged_data(attributes, &file_path, kind);
-                        }
-                    }
+                    return Err("Could not add file to structure".to_string());
                 }
             }
         }
 
-        /**
-         * Prints entire staging file
-         */
+        ///  Private helper function to go through all files in repository minus the DVCS hidden folder
+        fn recursive_file_traversal(&mut self, starting_directory: String, kind: i32) {
+            // * Check if starting directory exists
+            match Path::new(&starting_directory).exists() {
+                false => return,
+                true => {
+                    // * Check starting_directory is a valid path
+                    match fs::read_dir(starting_directory) {
+                        Ok(file_entry) => {
+                            for entry in file_entry {
+                                let path_buffer = entry.unwrap().path();
+                                let file_path = path_buffer.display().to_string();
+                                // * Loops through all files, not the DVCS hidden one
+                                if !file_path.contains(&self.dvcs_hidden) {
+                                    let attrib_result = fs::metadata(file_path.clone());
+                                    if attrib_result.is_ok() {
+                                        let attributes = attrib_result.unwrap();
+                                        if attributes.is_dir() {
+                                            // * Recursive call of all files in directory
+                                            let new_directory = file_path.clone();
+                                            self.add_staged_data(&file_path, kind, false);
+                                            // * Adds file to staging struct
+                                            Self::recursive_file_traversal(
+                                                self,
+                                                new_directory,
+                                                kind,
+                                            );
+                                        } else if attributes.is_file() {
+                                            // * Recursive call of all files in directory
+                                            self.add_staged_data(&file_path, kind, false);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Err(_) => return,
+                    };
+                }
+            }
+        }
+
+        /// Print staging snapshot (index.json)
         pub fn print_staging_snapshot(&self) {
             self.index.iter().for_each(|x| {
                 println!("PATH (key): {:?}", &x.0);
@@ -299,19 +380,23 @@ pub mod staging_storage {
             });
         }
 
-        // * Private helper function to write index struct to file
+        /// Private helper function to delete and create index file
         fn write_to_staging_file(&self) -> Result<(), String> {
-            let write = match fs::File::create(self.dvcs_hidden.to_owned() + "/index.json") {
-                Ok(file) => match serde_json::to_writer(file, &self.index) {
-                    Ok(_) => Ok(()), // * Successfully written to file
-                    Err(_) => Err("Could not write to index file".to_string()),
-                },
-                Err(_) => Err("Could not find index file".to_string()),
-            };
-            write
+            if Self::update_index_file(&self.dvcs_hidden).is_ok() {
+                return match fs::File::create(self.dvcs_hidden.to_owned() + "/index.json") {
+                    Ok(file) => {
+                        return match serde_json::to_writer(file, &self.index) {
+                            Ok(_) => Ok(()), // * Successfully written to file
+                            Err(_) => Err("Could not write to index file".to_string()),
+                        };
+                    }
+                    Err(_) => Err("Could not find index file".to_string()),
+                };
+            }
+            return Err("Could not find index file".to_string());
         }
 
-        // * Private helper function to read index struct from file
+        /// Private helper function to read index struct from file
         fn read_from_staging_file(
             path: String,
         ) -> Result<HashMap<String, StagedComparison>, String> {
@@ -345,6 +430,14 @@ pub mod staging_storage {
     #[cfg(test)]
     mod tests {
         use super::*;
+
+        #[test]
+        // * Update staging file with most recent version
+        fn update_staged_files() {
+            let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
+            let update = staging.update_staged_files();
+            assert_eq!(update.is_ok(), true);
+        }
 
         #[test]
         // * Adding a file to be stored in the staging storage successfully
