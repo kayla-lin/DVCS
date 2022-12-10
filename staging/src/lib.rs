@@ -23,7 +23,7 @@ pub mod staging_storage {
         sha1: String,
     }
 
-    /// Structure that holds metadata for working directory and repository snapshot as well as the files that are being staged
+    /// Structure that holds metadata for working directory and repository snapshot as well as the files that are being staged. This structure can be used to compare the versions of the file at different snapshots
     #[derive(Debug, Serialize, Deserialize, Clone)]
     pub struct StagedComparison {
         working_directory: Option<StagedData>,
@@ -147,15 +147,29 @@ pub mod staging_storage {
             // * Path to file
             // * Add data given metadata, filepath
             match self.add_staged_data(file_path, 0, false) {
-                Ok(file) => {
+                Ok(_) => {
                     // * Check to see if writing to file was a success
-                    match self.write_to_staging_file() {
-                        Err(_) => Err("Could not write to staging file".to_string()),
-                        Ok(_) => Ok(file),
-                    }
+                    self.write_to_staging_file()
                 }
                 Err(_) => Err("File does not exist to add".to_string()),
             }
+        }
+
+        /// Add file(s) to staging structure starting from directory
+        pub fn add_directory_to_staging(
+            &mut self,
+            kind: i32,
+            directory_path: &str,
+        ) -> Result<(), String> {
+            if let Ok(attributes) = fs::metadata(directory_path) {
+                if attributes.is_dir() {
+                    self.recursive_file_traversal(directory_path, kind);
+                    return self.write_to_staging_file();
+                } else if attributes.is_file() {
+                    return Err("Path must be to a directory".to_string());
+                }
+            }
+            Err("Directory path does not exist".to_string())
         }
 
         /// Remove file from staging structure
@@ -185,7 +199,7 @@ pub mod staging_storage {
             }
         }
 
-        ///Sets the current version of the repository as the snapshot version for comparison in the index file
+        /// Sets the current version of the repository as the snapshot version for comparison in the index file
         pub fn set_staging_snapshot(&mut self, kind: i32) -> Result<(), String> {
             self.recursive_file_traversal(self.working_directory.clone().as_str(), kind);
             self.write_to_staging_file()
@@ -247,7 +261,6 @@ pub mod staging_storage {
         }
 
         /// Private helper function that creates the data being stored & puts it in the corresponding kind
-        /// TODO: error check
         fn add_staged_data(
             &mut self,
             file_path: &str,
@@ -460,6 +473,23 @@ pub mod staging_storage {
             let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
             let file = staging.add_file_to_staging("./src/working-directory/folder 1/test2.txt");
             assert_eq!(file.is_ok(), true);
+        }
+
+        #[test]
+        // * Adding a file to be stored in the staging storage successfully
+        fn test_add_file_to_staging_from_directory_success() {
+            let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
+            let file = staging.add_directory_to_staging(0, "./src/working-directory/folder 1");
+            assert_eq!(file.is_ok(), true);
+        }
+
+        #[test]
+        // * Adding a file to be stored in the staging storage failure, not a directory given
+        fn test_add_file_to_staging_from_directory_fail() {
+            let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
+            // * Path to file given, will fail
+            let file = staging.add_directory_to_staging(0, "./src/working-directory/test1.txt");
+            assert_eq!(file.is_err(), true);
         }
 
         #[test]
