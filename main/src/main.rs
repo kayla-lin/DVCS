@@ -1,15 +1,23 @@
-use staging::*;
-use std::io::{Stdin, BufRead};
+use std::io::{Stdin};
+use std::panic::catch_unwind;
 use std::{fs, io};
 use std::fs::File;
-use usemods::{user_interaction::init_in, *};
+use usemods::dir_c::create_dir_main;
+use usemods::{ *};
 
 fn main() {
-    println!("Hello, world!");
+   /*  println!("Hello, world!");
     const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+   
     fs::create_dir(DVCS_HIDDEN);
     fs::create_dir("/tmp/dvcs_testi/");
-    let file = File::create("/tmp/dvcs_testi/");
+    let _sfile = File::create("/tmp/dvcs_testi/"); */
+
+    
+    if create_dir_main().is_err() {
+        panic!("Error creating directory");
+    }
+
     //taking user input 
     println!("Welcome to the DVCS:\n ");
     let mut input = String::new();
@@ -18,14 +26,23 @@ fn main() {
     stdin.read_line(&mut input).unwrap();
     let mut input = input.split_whitespace();
     let command = String::from(input.next().unwrap());
-// /tmp/dvcs_test
+
     match command.as_str() {
         "init" => {
             let file_path = String::from(input.next().unwrap());
             user_interaction::init_in(file_path);
 
         },
-        /* "add" => {
+        "diff" => {
+            let file_path = String::from(input.next().unwrap());
+            let head: String = String::from(input.next().unwrap());
+            user_interaction::diff_in(file_path, head);
+        },
+        "status" => {
+            let file_path = String::from(input.next().unwrap());
+            user_interaction::status_in(file_path);
+        },
+        "add" => {
             let file_path = String::from(input.next().unwrap());
             user_interaction::add_in(file_path);
         },
@@ -33,14 +50,6 @@ fn main() {
             let file_path = String::from(input.next().unwrap());
             user_interaction::remove_in(file_path);
         },
-        "status" => {
-            let file_path = String::from(input.next().unwrap());
-            user_interaction::status_in(file_path);
-        },
-        "pull" => {
-            let file_path = String::from(input.next().unwrap());
-            //user_interaction::pull_in(file_path);
-        }, */
         _ => {
             println!("Invalid command");
         }
