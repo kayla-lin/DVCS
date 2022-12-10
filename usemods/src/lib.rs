@@ -25,8 +25,6 @@ pub mod user_feedback{
     pub fn format_error_alt(errors: Vec<String>) {
             //print every 3 errors and display more when user enters
             
-            let mut length = errors.len();
-            
             fn pause() {
                 let mut stdin = io::stdin();
                 let mut stdout = io::stdout();
@@ -37,9 +35,9 @@ pub mod user_feedback{
                 // Read a single byte and discard
                 let _ = stdin.read(&mut [0u8]).unwrap();
             }
+
             let  mut rng = rand::thread_rng();
-            
-            
+        
             errors.chunks(3).for_each(|error| {
                 
                 error.to_vec().iter().for_each(|error| println!("{}", error.truecolor(rng.gen(), rng.gen(), rng.gen())));
@@ -55,12 +53,12 @@ pub mod user_feedback{
 pub mod user_interaction{
     use stager; 
     use std::{panic, any::Any, io::Stdout};
+    use std::path::Path;
 
     use crate::user_feedback::{display_first_error, display_all_errors, format_error_alt};
 
-
-    pub fn remove_in(file_path: String) -> Result<bool, Vec<String>> {
-        return Ok(stager::stager::remove(file_path)); 
+   /*  pub fn remove_in(file_path: String) -> bool {
+        return stager::stager::remove(file_path); 
     }
 
     pub fn status_in(file_path: String) -> Result<String, Vec<String>> {
@@ -104,56 +102,67 @@ pub mod user_interaction{
             return false;
         }
         
-    }
+    } */
 
     pub fn init_in(file_path: String) -> bool {
-        let init_res: Result<bool, Box<dyn Any + Send>> = panic::catch_unwind(|| {
-            return stager::stager::init(file_path);
-        });
+        let res = Path::new(&file_path).try_exists().unwrap_or_else(|_| false); 
+        
+        if res{
+            println!("File exists, initializing..."); 
+            stager::stager::init(file_path);
+            return true;
 
-        if init_res.is_ok() {
-            print!("Success!");
-            return init_res.unwrap();
         } else {
-            print!("There is an error, which error function do you want to use?");
+            println!("Error!");
+            println!("Which error function do you want to use?");
             //read console input
             //match input to error function
-            
 
             let errchoice = std::io::stdin();
-            let err = init_res.unwrap_err().downcast::<String>().unwrap().to_string();
-            print!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
+            println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
             let mut input = String::new();
             let errfn = errchoice.read_line(&mut input).unwrap();
+    
+            let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
             
             match errfn {
                 1 => {
                     //display first error
-                    display_first_error(vec![err]);
+                    display_first_error(vec![t_er]);
                 }
                 2 => {
                     //display all errors
-                    display_all_errors(vec![err]);
+                    display_all_errors(vec![t_er]);
                 }
                 3 => {
                     //display errors in chunks
-                    format_error_alt(vec![err]);
+                    format_error_alt(vec![t_er]);
                 }
                 _ => {
                     //display first error
-                    display_all_errors(vec![err]);
+                    display_all_errors(vec![t_er]);
                 }
             }
+
             return false;
         }
     }
 
+   /*  pub fn diff_in(file_path: String, head: String) -> bool {
+        
+        
 
 
-}
+        if stager::stager::diff(file_path, head).is_ok() {
+            return true;
+        }else {
+            return false;
+        }
+        
+    } */
 
-pub mod repo_and_working{
-   
+
+
 
 
 }
