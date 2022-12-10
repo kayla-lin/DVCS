@@ -20,12 +20,12 @@ fn main() {
     let command = String::from(input.next().unwrap());
 // /tmp/dvcs_test
     match command.as_str() {
-        "innit" => {
+        "init" => {
             let file_path = String::from(input.next().unwrap());
             user_interaction::init_in(file_path);
 
         },
-        "add" => {
+        /* "add" => {
             let file_path = String::from(input.next().unwrap());
             user_interaction::add_in(file_path);
         },
@@ -37,9 +37,13 @@ fn main() {
             let file_path = String::from(input.next().unwrap());
             user_interaction::status_in(file_path);
         },
+        "pull" => {
+            let file_path = String::from(input.next().unwrap());
+            //user_interaction::pull_in(file_path);
+        }, */
         _ => {
             println!("Invalid command");
         }
-    }
+    } 
 
 }
