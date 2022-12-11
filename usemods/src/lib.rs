@@ -114,7 +114,12 @@ pub mod user_interaction{
             true => {
                 println!("File exists, diffing...");
                 let stager = stager::stager::Stager{};
-                stager.diff(file_path, head);
+                let diff_res = stager.diff(file_path, head);
+                if diff_res.is_err(){
+                    let t_er = diff_res.unwrap_err();
+                    display_first_error(vec![t_er]);
+                    return false;
+                }
                 return true;
             },
             false => {

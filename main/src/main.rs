@@ -34,26 +34,41 @@ fn main() {
     match command.as_str() {
         "init" => {
             let file_path = String::from(input.next().unwrap_or_else(|| {
-                println!("Invalid command");
+                println!("Empty path");
                 ""
             }));
             user_interaction::init_in(file_path);
         }
         "diff" => {
-            let file_path = String::from(input.next().unwrap());
-            let head: String = String::from(input.next().unwrap());
+            let file_path = String::from(input.next().unwrap_or_else(|| {
+                println!("Empty path");
+                ""
+            }));
+            let head: String = String::from(input.next().unwrap_or_else(|| {
+                println!("Empty head");
+                ""
+            }));
             user_interaction::diff_in(file_path, head);
         }
         "status" => {
-            let file_path = String::from(input.next().unwrap());
+            let file_path = String::from(input.next().unwrap_or_else(|| {
+                println!("Empty path");
+                ""
+            }));
             user_interaction::status_in(file_path);
         }
         "add" => {
-            let file_path = String::from(input.next().unwrap());
+            let file_path = String::from(input.next().unwrap_or_else(|| {
+                println!("Empty path");
+                ""
+            }));
             user_interaction::add_in(file_path);
         }
         "remove" => {
-            let file_path = String::from(input.next().unwrap());
+            let file_path = String::from(input.next().unwrap_or_else(|| {
+                println!("Empty path");
+                ""
+            }));
             user_interaction::remove_in(file_path);
         }
         "see_diff" => {
