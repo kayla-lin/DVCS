@@ -63,7 +63,7 @@ pub mod user_interaction{
                 let fp = file_path.clone();
                 let init_res = stager::stager::Stager::init(file_path);
                 if init_res.is_err(){
-                    let t_er = "file path: ".to_owned() + &fp.to_string() + " does not exists!";
+                    let t_er = init_res.unwrap_err();
                     display_first_error(vec![t_er]);
                     return false;
                 }

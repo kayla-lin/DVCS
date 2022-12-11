@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fs::File;
 use std::io::Stdin;
 use std::panic::catch_unwind;
 use std::{fs, io};
@@ -32,7 +33,10 @@ fn main() {
 
     match command.as_str() {
         "init" => {
-            let file_path = String::from(input.next().unwrap());
+            let file_path = String::from(input.next().unwrap_or_else(|| {
+                println!("Invalid command");
+                ""
+            }));
             user_interaction::init_in(file_path);
         }
         "diff" => {
