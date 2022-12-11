@@ -13,11 +13,11 @@ fn main() {
     fs::create_dir("/tmp/dvcs_testi/");
     let _sfile = File::create("/tmp/dvcs_testi/"); */
 
-    let cdr = create_dir_main();
+//    let cdr = create_dir_main();
 
-    if cdr.is_err() {
-        panic!("Error creating directory");
-    }
+//    if cdr.is_err() {
+//        panic!("Error creating directory");
+//    }
 
     //taking user input 
     println!("Welcome to the DVCS:\n ");

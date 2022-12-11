@@ -14,7 +14,6 @@ pub mod stager {
     impl Repo {}
 
     pub struct Stager {
-        initial_err :String,
         //    staging: Staging,
     }
 
@@ -31,7 +30,7 @@ pub mod stager {
             return true;
         }
 
-        pub fn diff(file_path: String, head: String) -> Result<String, String> {
+        pub fn diff(self, file_path: String, head: String) -> Result<String, String> {
             let mut path: String;
             if head.is_empty() {
                 //find path to head origin or error
@@ -122,9 +121,9 @@ pub mod stager {
         #[test]
         // * Adding a file to be stored in the staging storage successfully
         fn success_diff() {
-            let stager_i = Stager{initial_err:String::from("errors")};
-//            stager_i.diff(String::from("/tmp/one"), String::from(""));
-            let a = Stager::diff(String::from("/tmp/one"), String::from(""));
+            let stager_i = Stager{};
+            let a = stager_i.diff(String::from("/tmp/one"), String::from(""));
+//            let a = Stager::diff(String::from("/tmp/one"), String::from(""));
 
             assert_eq!(a, Ok(String::from("")));
         }
