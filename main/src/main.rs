@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::{Stdin};
+use std::io::Stdin;
 use std::panic::catch_unwind;
 use std::{fs, io};
 use storage_hiding::repository_storage::{self, RepositoryStorage};
@@ -28,7 +28,7 @@ fn main() {
     stdin.read_line(&mut input).unwrap();
     let mut input = input.split_whitespace();
     let command = String::from(input.next().unwrap());
-    let mut repo_storage:RepositoryStorage;
+    let mut repo_storage: RepositoryStorage;
 
     match command.as_str() {
         "init" => {
@@ -51,29 +51,14 @@ fn main() {
         "remove" => {
             let file_path = String::from(input.next().unwrap());
             user_interaction::remove_in(file_path);
-<<<<<<< HEAD
         }
-        "new" => {
-            let mut repo_storage = RepositoryStorage::new();
-            print!("Repo Storage created");
+        "see_diff" => {
+            //let snapshot =
+            let diff = user_interaction::see_diff_in(&HashMap::new()).0;
         }
+
         _ => {
             println!("Invalid command");
         }
     }
-=======
-        },
-        "see_diff" => {
-            //let snapshot = 
-            let diff = user_interaction::see_diff_in(&HashMap::new()).0;
-        },
-       
-        _ => {
-            println!("Invalid command");
-        }
-    } 
-
-
-
->>>>>>> 59a01bffb29a361d944401ee1d0c16d6c2a4c17b
 }
