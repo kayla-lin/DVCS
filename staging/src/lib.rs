@@ -70,7 +70,7 @@ pub mod staging_storage {
                         Err(_) => return Err("Could not read DVCS hidden file".to_string()),
                         // * Create new index file if not created already
                         Ok(false) => {
-                            let update = Self::update_index_file(dvcs_hidden);
+                            let update = Self::recreate_index_file(dvcs_hidden);
                             if update.is_err() {
                                 return Err(update.unwrap_err());
                             }
@@ -94,28 +94,31 @@ pub mod staging_storage {
             };
         }
 
-        /// Updates the status of staged files that are previously added in order to get most recent snapshot of the tracked file
+        /// Updates the status of working directory and repository files that are previously added in order to get most recent snapshot of the tracked file - will get most recent metadata/or of both the working directory and staged. If a file is removed from the working directory, will replace that value to None
         pub fn update_staged_files(&mut self) -> Result<(), String> {
             let values: Vec<StagedComparison> = self.index.clone().into_values().collect();
             let update: (Result<(), String>, Option<&StagedComparison>) =
                 values.iter().fold((Ok(()), None), |acc, val| {
                     let staging = val.staging.as_ref();
-                    // * Will update staged data / replace files that cannot be found as null
+                    // * Will update staged data and working directory (file removed will replace working directory only with None, thus you can check if a staged file has been deleted)
                     if staging.is_some() {
                         if self
-                            .add_staged_data(&staging.unwrap().path, 0, true)
+                            .add_staged_data(&staging.unwrap().path, 1, true)
                             .is_ok()
+                            && self
+                                .add_staged_data(&staging.unwrap().path, 0, false)
+                                .is_ok()
                         {
                             return (self.write_to_staging_file(), Some(val));
                         }
                     }
                     return (acc.0, Some(val));
                 });
-            update.0
+            self.write_to_staging_file()
         }
 
-        /// Private function that deletes index file and creates new one
-        fn update_index_file(dvcs_hidden: &str) -> Result<(), String> {
+        /// Function that deletes index file and creates new one to reduce writing conflict
+        pub fn recreate_index_file(dvcs_hidden: &str) -> Result<(), String> {
             match Path::new(&dvcs_hidden).try_exists() {
                 // * Repository cannot be found with given dvcs hidden path
                 Err(_) => return Err("Could not find working directory files".to_string()),
@@ -185,9 +188,8 @@ pub mod staging_storage {
                 Err(_) => Err("Cannot find file to remove".to_string()),
             }
         }
-        /**
-         * Remove file comparison from staging struct
-         */
+
+        /// Gets working directory, repository, and staging version of the file
         pub fn get_file_from_staging(
             &mut self,
             file_path: &str,
@@ -251,7 +253,7 @@ pub mod staging_storage {
             // * Sha1 hash object into bytes
             let mut hasher = Sha1::new();
             if let Ok(mut file) = fs::File::open(file_path) {
-                let n = io::copy(&mut file, &mut hasher);
+                io::copy(&mut file, &mut hasher);
                 let result = hasher.finalize();
                 // * Encode sha1 encryption into hex
                 return Ok(hex::encode(result));
@@ -329,6 +331,7 @@ pub mod staging_storage {
                 }
                 // * If file cannot be found set the index as a blank
                 Err(_) => {
+                    println!("Add to staging");
                     if add_nulls {
                         self.index
                             .entry(file_path.to_string())
@@ -405,7 +408,7 @@ pub mod staging_storage {
 
         /// Private helper function to delete and create index file
         fn write_to_staging_file(&self) -> Result<(), String> {
-            if Self::update_index_file(&self.dvcs_hidden).is_ok() {
+            if Self::recreate_index_file(&self.dvcs_hidden).is_ok() {
                 return match fs::File::create(self.dvcs_hidden.to_owned() + "/index.json") {
                     Ok(file) => {
                         return match serde_json::to_writer(file, &self.index) {
@@ -477,7 +480,7 @@ pub mod staging_storage {
 
         #[test]
         // * Adding a file to be stored in the staging storage successfully
-        fn test_add_file_to_staging_from_directory_success() {
+        fn test_add_directory_to_staging_success() {
             let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
             let file = staging.add_directory_to_staging(0, "./src/working-directory/folder 1");
             assert_eq!(file.is_ok(), true);
@@ -485,7 +488,7 @@ pub mod staging_storage {
 
         #[test]
         // * Adding a file to be stored in the staging storage failure, not a directory given
-        fn test_add_file_to_staging_from_directory_fail() {
+        fn test_add_directory_to_staging_fail() {
             let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
             // * Path to file given, will fail
             let file = staging.add_directory_to_staging(0, "./src/working-directory/test1.txt");
