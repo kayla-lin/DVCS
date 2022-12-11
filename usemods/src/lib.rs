@@ -52,9 +52,9 @@ pub mod user_feedback{
 pub mod user_interaction{
 
     use stager;
-    use std::path::Path;
-
+    use std::{path::Path, collections::HashMap};
     use crate::user_feedback::{display_first_error, display_all_errors, format_error_alt};
+    use storage_hiding::repository_storage::{RepositoryStorage, self}; 
     
     pub fn init_in(file_path: String) -> bool {
         //let res = Path::new(&file_path).try_exists().unwrap_or_else(|_| false); 
@@ -209,6 +209,15 @@ pub mod user_interaction{
         let res = stager::stager::Stager::add(file_path);
         return res.is_ok();
     }
+
+    pub fn see_diff_in(snapshot: &HashMap<String, String>) -> (HashMap<String, String>, bool){
+        //new instance of RepositoryStorage
+        let repo = RepositoryStorage::new();
+        (repo.see_diff(snapshot), true)
+    }
+    
+
+
 
 }
 
