@@ -53,22 +53,22 @@ pub mod user_feedback{
 
 
 pub mod user_interaction{
-    use stager; 
+    use stager;
     use std::{panic, any::Any, io::Stdout};
 
     use crate::user_feedback::{display_first_error, display_all_errors, format_error_alt};
 
 
-    pub fn remove_in(file_path: String) -> Result<bool, Vec<String>> {
-        return Ok(stager::stager::remove(file_path)); 
+    pub fn remove_in(file_path: String) -> Result<(), String> {
+        return stager::stager::Stager::remove(file_path);
     }
 
     pub fn status_in(file_path: String) -> Result<String, Vec<String>> {
-        return stager::stager::status(file_path).map_err(|e| vec![e]);
+        return stager::stager::Stager::status(file_path).map_err(|e| vec![e]);
     }
     pub fn add_in(file_path: String) -> bool {
-        let res:Result<bool, Box<dyn Any + Send>> = panic::catch_unwind(|| {
-            return stager::stager::add(file_path); 
+        let res:Result<(bool), Box<dyn Any + Send>> = panic::catch_unwind(|| {
+            return stager::stager::Stager::add(file_path).is_ok();
         });
         if res.is_ok() {
             print!("There is no error");
@@ -108,7 +108,7 @@ pub mod user_interaction{
 
     pub fn init_in(file_path: String) -> bool {
         let init_res: Result<bool, Box<dyn Any + Send>> = panic::catch_unwind(|| {
-            return stager::stager::init(file_path);
+            return stager::stager::Stager::init(file_path).is_ok();
         });
 
         if init_res.is_ok() {
