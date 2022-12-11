@@ -1,5 +1,8 @@
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use serde_json;
+use std::{collections::HashMap, path::Path};
 
+#[derive(Debug, Serialize)]
 struct RepositoryController {
     // vector to store the commit history for the repository (could be a hashSet as well)
     commit_history: Vec<String>,
@@ -11,41 +14,83 @@ struct RepositoryController {
 }
 
 impl RepositoryController {
-    pub fn new(dvcs_hidden: &str, working_directory: &str) -> Result<Staging, String> {
-        // * Check if index file exists, otherwise create it
+    pub fn create_repo(dvcs_hidden: &str) -> Result<(), String> {
         match Path::new(&dvcs_hidden).try_exists() {
-            // * Repository exist has error
-            Err(_) => return Err("Could not read DVCS hidden file".to_string()),
-            Ok(false) => return Err("Could not find working directory".to_string()),
-            Ok(true) => {
+            // * Repository cannot be found with given dvcs hidden path
+            Err(_) => return Err("Could not find working directory files".to_string()),
+            Ok(false) => {
                 // * Creating index file if it doesn't exist already
-                let index_path = &(dvcs_hidden.to_owned() + "/index.json");
-                match Path::new(&index_path).try_exists() {
-                    Err(_) => return Err("Could not read DVCS hidden file".to_string()),
-                    // * Create new index file if not created already
-                    Ok(false) => {
-                        let update = Self::recreate_index_file(dvcs_hidden);
-                        if update.is_err() {
-                            return Err(update.unwrap_err());
+                let index_path = &(dvcs_hidden.to_owned() + "/repo.json");
+                match Path::new(index_path).try_exists() {
+                    Err(_) => return Err("Could not create index file".to_string()),
+                    // * If there is an index file, remove it
+                    Ok(true) => {
+                        if fs::remove_file(index_path).is_err() {
+                            return Err("Error creating new index file".to_string());
                         }
                     }
-                    // * Index file exists, ignore
-                    _ => {}
+                    // * If there isn't an index file, ignore
+                    Ok(false) => {}
+                };
+                // * Create new index file
+                if File::create(index_path).is_err() {
+                    return Err("Could not create index file".to_string());
                 }
-
-                // * Read index file and load the staging index structure
-                // * Returning successful staging structure if read succussfully, otherwise returns new staging
-                return Self::read_from_staging_file(dvcs_hidden.to_string())
-                    .and_then(|retrieved_file| {
-                        return Ok(Staging {
-                            dvcs_hidden: dvcs_hidden.to_string(),
-                            working_directory: working_directory.to_string(),
-                            index: retrieved_file,
-                        });
-                    })
-                    .or_else(|err| Err(err));
+                Ok(())
             }
-        };
+            Ok(true) => {
+                let path = "target/dir";
+                if !std::path::Path::new(&path).exists() {
+                    std::fs::create_dir(path)?;
+                }
+            }
+        }
+    }
+
+    fn save_locally(self) {
+        if Self::recreate_index_file(&self.dvcs_hidden).is_ok() {
+            return match fs::File::create(self.dvcs_hidden.to_owned() + "/index.json") {
+                Ok(file) => {
+                    return match serde_json::to_writer(file, &self.index) {
+                        Ok(_) => Ok(()), // * Successfully written to file
+                        Err(_) => Err("Could not write to index file".to_string()),
+                    };
+                }
+                Err(_) => Err("Could not recreate index file".to_string()),
+            };
+        }
+        return Err("Could not find index file".to_string());
+    }
+
+    /// Private helper function to read index struct from file
+    fn read_from_repo_from_file(dvcs_hidden: String) -> RepositoryController {
+        // * Open the json file
+        match File::open(dvcs_hidden + "/repo.json") {
+            Ok(repo_file) => {
+                let mut contents = String::new();
+                // * Creating string from contents in index file
+                repo_file
+                    .borrow()
+                    .read_to_string(&mut contents)
+                    .or_else(|_| {
+                        return Err("No content found in repo file".to_string());
+                    })
+                    .unwrap();
+                // * Check if file is empty, create empty hashmap
+                if contents.to_string().len() == 0 {
+                    return Ok(HashMap::new());
+                }
+                // * Otherwise, return structure created from file, TODO: safe way to check if this works?
+                if let Ok(deserialized) = serde_json::from_str(&contents.to_string()) {
+                    return Ok(deserialized);
+                } else {
+                    return Err("Could not deserialize repo file".to_string());
+                }
+            }
+            Err(_) => {
+                return Err("Could not open repo file".to_string());
+            }
+        }
     }
 
     // commits the current state of the repository to storage
