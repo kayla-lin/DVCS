@@ -94,6 +94,9 @@ pub mod staging_storage {
             };
         }
 
+        
+
+
         pub fn get_index(self) -> HashMap<String, StagedComparison> {
             self.index
         }
