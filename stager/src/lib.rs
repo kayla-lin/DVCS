@@ -1,5 +1,5 @@
 pub mod stager {
-    use staging::staging_storage::Staging;
+    use staging::staging_storage::{StagedComparison, Staging};
     use std::fs;
     use std::fs::File;
     use std::io;
@@ -46,15 +46,27 @@ pub mod stager {
             if file_path.is_empty() {
                 return Err(String::from("empty path"));
             } else {
+                let mut output: String;
+                output = String::from("changed:\n");
                 let staging = Staging::new(DVCS_HIDDEN, file_path.as_str());
 
-                if staging.is_ok() {
-                    staging.unwrap().print_staging_snapshot();
-                    return Ok(String::from("done"));
-                } else {
-                    return Err(staging.err().unwrap());
-                }
+                let values: Vec<StagedComparison> =
+                    staging.unwrap().get_index().clone().into_values().collect();
+                let update: String = values.iter().fold(output, |mut acc, val| {
+                    let staging_ = val.staging.clone().unwrap();
+                    let other_ = val.working_directory.clone().unwrap();
+                    if staging_.modified != other_.modified
+                        || staging_.created != other_.created
+                        || staging_.mode != other_.mode
+                        || staging_.sha1 != other_.sha1
+                    {
+                        acc.push_str(staging_.path.as_str());
+                    }
+                    return acc;
+                });
+                return Ok(update);
             }
+
         }
 
         pub fn add(file_path: String) -> Result<(), String> {
@@ -116,70 +128,73 @@ pub mod stager {
 
     #[cfg(test)]
     mod tests {
+        use crate::stager;
+
         use super::*;
 
         #[test]
         // * Adding a file to be stored in the staging storage successfully
         fn success_diff() {
-            let stager_i = Stager {
-               // initial_err: String::from("errors"),
-            };
-            stager_i.diff(String::from("/tmp/one"), String::from(""));
-            //let a = Stager::diff(String::from("/tmp/one"), String::from(""));
+            let stager_i = Stager {};
+            let a = stager_i.diff(String::from("/tmp/one"), String::from(""));
+            //            let a = Stager::diff(String::from("/tmp/one"), String::from(""));
 
             //assert_eq!(a, Ok(String::from("")));
         }
 
-        /*
-           #[test]
-           // * Adding a file to be stored in the staging storage successfully
-           fn all_status() {
-               let stager_ = Stager {};
-               let a = stager_.status(String::from("/tmp/one"));
+        #[test]
+        // * Adding a file to be stored in the staging storage successfully
+        fn all_status() {
+            //               let stager_ = Stager {};
+            //               let a = stager_.status(String::from("/tmp/one"));
+            fs::create_dir(DVCS_HIDDEN);
 
-              assert_eq!(a, Ok(String::from("state")));
-              assert_eq!(status(String::from("")), Err(String::from("empty path")));
+            fs::remove_dir_all("/tmp/dvcs_test/");
+            fs::create_dir("/tmp/dvcs_test/");
 
-           }
+            let a = stager::Stager::init(String::from("/tmp/dvcs_test/"));
 
+            let file = File::create("/tmp/dvcs_test/one.txt");
+            stager::Stager::add(String::from("/tmp/dvcs_test/one.txt"));
 
-           #[test]
-           // * Adding a file to be stored in the staging storage successfully
-           fn all_add() {
-               let _stager = Stager {};
-               let a = stager_.add(String::from("/tmp/one"));
+            let a = stager::Stager::status(String::from("/tmp/dvcs_test/"));
 
-              assert_eq!(a, true);
+            assert_eq!(a, Ok(String::from("state")));
+            assert_eq!(
+                stager::Stager::status(String::from("")),
+                Err(String::from("empty path"))
+            );
+        }
 
-           }
+        #[test]
+        // * Adding a file to be stored in the staging storage successfully
+        fn all_add() {
+            let a = stager::Stager::add(String::from("/tmp/one"));
 
+            assert_eq!(a.is_ok(), true);
+        }
 
-           #[test]
-           // * Adding a file to be stored in the staging storage successfully
-           fn all_remove() {
-               let _stager = Stager {};
-               let a = _stager.remove(String::from("/tmp/one"));
+        #[test]
+        // * Adding a file to be stored in the staging storage successfully
+        fn all_remove() {
+            let a = stager::Stager::remove(String::from("/tmp/one"));
 
-              assert_eq!(a, true);
+            assert_eq!(a.is_ok(), true);
+        }
+        #[test]
+        // * Adding a file to be stored in the staging storage successfully
+        fn all_init() {
+            fs::create_dir(DVCS_HIDDEN);
 
-           }
-           #[test]
-           // * Adding a file to be stored in the staging storage successfully
-           fn all_init() {
-               fs::create_dir(DVCS_HIDDEN);
+            fs::remove_dir_all("/tmp/dvcs_test/");
+            fs::create_dir("/tmp/dvcs_test/");
 
-               fs::remove_dir_all("/tmp/dvcs_test/");
-               fs::create_dir("/tmp/dvcs_test/");
+            let b = stager::Stager::init(String::from("/tmp/dvcs_test/"));
+            assert_eq!(b.is_ok(), true);
 
-               let _stager = Stager {};
-
-               let b = _stager.init(String::from("/tmp/dvcs_test/"));
-               assert_eq!(b.is_ok(), true);
-
-              let file = File::create("/tmp/dvcs_test/one.txt");
-              let b = _stager.init(String::from("/tmp/dvcs_test/"));
-              assert_eq!(b.is_err(), true);
-           }
-        */
+            let file = File::create("/tmp/dvcs_test/one.txt");
+            let b = stager::Stager::init(String::from("/tmp/dvcs_test/"));
+            assert_eq!(b.is_err(), true);
+        }
     }
 }

@@ -13,22 +13,22 @@ pub mod staging_storage {
     /// Structure that keeps relevant metadata and the sha1 hash of the file/folder
     #[derive(Debug, Serialize, Deserialize, Clone)]
     pub struct StagedData {
-        path: String,
-        modified: String,
-        created: String,
-        accessed: String,
-        mode: String,
-        read_only: String,
-        is_file: String,
-        sha1: String,
+        pub path: String,
+        pub modified: String,
+        pub created: String,
+        pub accessed: String,
+        pub mode: String,
+        pub read_only: String,
+        pub is_file: String,
+        pub sha1: String,
     }
 
     /// Structure that holds metadata for working directory and repository snapshot as well as the files that are being staged. This structure can be used to compare the versions of the file at different snapshots
     #[derive(Debug, Serialize, Deserialize, Clone)]
     pub struct StagedComparison {
-        working_directory: Option<StagedData>,
-        staging: Option<StagedData>,
-        repository_version: Option<StagedData>,
+        pub working_directory: Option<StagedData>,
+        pub staging: Option<StagedData>,
+        pub repository_version: Option<StagedData>,
     }
 
     /// Staging storage hiding module
@@ -93,6 +93,9 @@ pub mod staging_storage {
                 }
             };
         }
+
+        
+
 
         pub fn get_index(self) -> HashMap<String, StagedComparison> {
             self.index
