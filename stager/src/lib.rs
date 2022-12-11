@@ -2,6 +2,7 @@ pub mod stager {
     use staging::staging_storage::Staging;
     use std::fs;
     use std::fs::File;
+    use std::io;
 
 const DVCS_HIDDEN:&str = "/tmp/dvcs_team";
 
@@ -64,10 +65,13 @@ pub fn init(file_path: String) -> bool {
     if file_path.is_empty() {
         return false;
     } else {
-        println!("Initializing repository in {}", file_path);
+        let contents:Result<fs::ReadDir, io::Error> = fs::read_dir(&file_path);
+        if contents.unwrap().next().is_some() {
+            return false;
+        }
         let staging = Staging::new(
-            &String::from(DVCS_HIDDEN),
-            &String::from(file_path),
+            &DVCS_HIDDEN,
+            &file_path,
         );
         if staging.is_ok() {
             staging.unwrap().set_staging_snapshot(1); // 1 = working directory
@@ -127,11 +131,15 @@ mod tests {
     fn all_init() {
         fs::create_dir(DVCS_HIDDEN);
 
+        fs::remove_dir_all("/tmp/dvcs_test/");
         fs::create_dir("/tmp/dvcs_test/");
 
-       let file = File::create("/tmp/dvcs_test/");
+        let b = init(String::from("/tmp/dvcs_test/"));
+        assert_eq!(b, true);
+
+       let file = File::create("/tmp/dvcs_test/one.txt");
        let b = init(String::from("/tmp/dvcs_test/"));
-       assert_eq!(b, true);
+       assert_eq!(b, false);
 
 
     }
