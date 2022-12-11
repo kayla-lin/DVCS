@@ -11,6 +11,43 @@ struct RepositoryController {
 }
 
 impl RepositoryController {
+    pub fn new(dvcs_hidden: &str, working_directory: &str) -> Result<Staging, String> {
+        // * Check if index file exists, otherwise create it
+        match Path::new(&dvcs_hidden).try_exists() {
+            // * Repository exist has error
+            Err(_) => return Err("Could not read DVCS hidden file".to_string()),
+            Ok(false) => return Err("Could not find working directory".to_string()),
+            Ok(true) => {
+                // * Creating index file if it doesn't exist already
+                let index_path = &(dvcs_hidden.to_owned() + "/index.json");
+                match Path::new(&index_path).try_exists() {
+                    Err(_) => return Err("Could not read DVCS hidden file".to_string()),
+                    // * Create new index file if not created already
+                    Ok(false) => {
+                        let update = Self::recreate_index_file(dvcs_hidden);
+                        if update.is_err() {
+                            return Err(update.unwrap_err());
+                        }
+                    }
+                    // * Index file exists, ignore
+                    _ => {}
+                }
+
+                // * Read index file and load the staging index structure
+                // * Returning successful staging structure if read succussfully, otherwise returns new staging
+                return Self::read_from_staging_file(dvcs_hidden.to_string())
+                    .and_then(|retrieved_file| {
+                        return Ok(Staging {
+                            dvcs_hidden: dvcs_hidden.to_string(),
+                            working_directory: working_directory.to_string(),
+                            index: retrieved_file,
+                        });
+                    })
+                    .or_else(|err| Err(err));
+            }
+        };
+    }
+
     // commits the current state of the repository to storage
     fn commit(&mut self, branch: &str, commit_message: String, files: Vec<(String, String)>) {
         // updates the head commit for the specified branch

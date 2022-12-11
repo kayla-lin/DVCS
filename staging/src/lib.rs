@@ -94,6 +94,10 @@ pub mod staging_storage {
             };
         }
 
+        pub fn get_index(self) -> HashMap<String, StagedComparison> {
+            self.index
+        }
+
         /// Updates the status of working directory and repository files that are previously added in order to get most recent snapshot of the tracked file - will get most recent metadata/or of both the working directory and staged. If a file is removed from the working directory, will replace that value to None
         pub fn update_staged_files(&mut self) -> Result<(), String> {
             let values: Vec<StagedComparison> = self.index.clone().into_values().collect();
