@@ -60,8 +60,14 @@ pub mod user_interaction{
         //let res = Path::new(&file_path).try_exists().unwrap_or_else(|_| false); 
         match Path::new(&file_path).try_exists().unwrap_or_else(|_| false) {
             true => {
-                println!("File exists, initializing..."); 
-                stager::stager::Stager::init(file_path);
+                let fp = file_path.clone();
+                let init_res = stager::stager::Stager::init(file_path);
+                if init_res.is_err(){
+                    let t_er = "file path: ".to_owned() + &fp.to_string() + " does not exists!";
+                    display_first_error(vec![t_er]);
+                    return false;
+                }
+                println!("Initialized empty dvcs repository in {}", &fp);
                 return true;
             },
             false => {

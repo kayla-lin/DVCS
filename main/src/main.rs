@@ -61,6 +61,7 @@ fn main() {
             //let snapshot = 
             let diff = user_interaction::see_diff_in(&HashMap::new()).0;
         },
+        
        
         _ => {
             println!("Invalid command");
