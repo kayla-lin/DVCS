@@ -13,8 +13,9 @@ fn main() {
     fs::create_dir("/tmp/dvcs_testi/");
     let _sfile = File::create("/tmp/dvcs_testi/"); */
 
-    
-    if create_dir_main().is_err() {
+    let cdr = create_dir_main();
+
+    if cdr.is_err() {
         panic!("Error creating directory");
     }
 
