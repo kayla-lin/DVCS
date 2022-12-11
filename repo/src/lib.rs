@@ -1,86 +1,120 @@
 use serde::{Deserialize, Serialize};
 use serde_json;
+use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fs::{self, File};
+use std::io::Read;
 use std::path::Path;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize)]
 struct RepositoryController {
     // vector to store the commit history for the repository (could be a hashSet as well)
     commit_history: Vec<String>,
+
     // map to store the head commits for each branch in the repository
     branch_heads: HashMap<String, String>,
 
     // map to store the commit history for each file in the repository
     file_history: HashMap<String, Vec<String>>,
+
+    // dvcs_hidden path
+    dvcs_hidden: String,
 }
 
 impl RepositoryController {
     /// Creates dvcs hidden folder and repo
-    pub fn create_repo(self, dvcs_hidden: &str) -> Result<(), String> {
+    fn new(dvcs_hidden: &str) -> Result<RepositoryController, String> {
+        let dvcs_hidden = dvcs_hidden;
         match Path::new(&dvcs_hidden).try_exists() {
             // * Repository cannot be found with given dvcs hidden path
-            Err(_) => Err("Could not find working directory files".to_string()),
+            Err(_) => Err("Could not find dvcs directory files".to_string()),
             Ok(false) => Err("DVCS path doesn't exist".to_string()),
             // * Path exists create repo directory
-            Ok(true) => match std::fs::create_dir(dvcs_hidden.to_owned() + "/dvcs_hidden") {
-                Err(_) => Err("Error with creating repo".to_string()),
-                Ok(_) => {
-                    let repo_path = &(dvcs_hidden.to_owned() + "/dvcs_hidden/repo.json");
-                    if File::create(repo_path).is_err() {
-                        return Err("Could not create index file".to_string());
-                    };
-                    Ok(())
+            Ok(true) => {
+                let repo_file_path = dvcs_hidden.to_owned() + "/.dvcs_hidden/repo.json";
+                match Path::new(&repo_file_path).try_exists() {
+                    Ok(_) => Self::read_from_repo_from_file(dvcs_hidden),
+                    Err(_) => {
+                        match std::fs::create_dir(dvcs_hidden.to_owned() + "/.dvcs_hidden") {
+                            Err(_) => Err("Error with creating repo".to_string()),
+                            Ok(_) => {
+                                let repo_path =
+                                    &(dvcs_hidden.to_owned() + "/.dvcs_hidden/repo.json");
+                                if File::create(repo_path).is_err() {
+                                    return Err("Could not create repo file".to_string());
+                                };
+                                return Ok(RepositoryController {
+                                    // vector to store the commit history for the repository (could be a hashSet as well)
+                                    commit_history: vec![],
+                                    // map to store the head commits for each branch in the repository
+                                    branch_heads: HashMap::new(),
+
+                                    // map to store the commit history for each file in the repository
+                                    file_history: HashMap::new(),
+
+                                    dvcs_hidden: dvcs_hidden.to_string(),
+                                });
+                            }
+                        }
+                    }
                 }
-            },
+            }
         }
     }
 
-    // fn save_locally(self) {
-    //     if Self::recreate_index_file(&self.dvcs_hidden).is_ok() {
-    //         return match fs::File::create(self.dvcs_hidden.to_owned() + "/index.json") {
-    //             Ok(file) => {
-    //                 return match serde_json::to_writer(file, &self.index) {
-    //                     Ok(_) => Ok(()), // * Successfully written to file
-    //                     Err(_) => Err("Could not write to index file".to_string()),
-    //                 };
-    //             }
-    //             Err(_) => Err("Could not recreate index file".to_string()),
-    //         };
-    //     }
-    //     return Err("Could not find index file".to_string());
-    // }
+    /// Saves current repo structure to file
+    fn save_locally(&self) -> Result<(), String> {
+        match fs::File::create(self.dvcs_hidden.to_owned() + "/.dvcs_hidden/repo.json") {
+            Ok(file) => {
+                return match serde_json::to_writer(file, &self) {
+                    Ok(_) => Ok(()), // * Successfully written to file
+                    Err(_) => Err("Could not write to repo file".to_string()),
+                };
+            }
+            Err(_) => return Err("Could not recreate repo file".to_string()),
+        }
+    }
 
     /// Private helper function to read index struct from file
-    // fn read_from_repo_from_file(dvcs_hidden: String) -> RepositoryController {
-    //     // * Open the json file
-    //     match File::open(dvcs_hidden + "/repo.json") {
-    //         Ok(repo_file) => {
-    //             let mut contents = String::new();
-    //             // * Creating string from contents in index file
-    //             repo_file
-    //                 .borrow()
-    //                 .read_to_string(&mut contents)
-    //                 .or_else(|_| {
-    //                     return Err("No content found in repo file".to_string());
-    //                 })
-    //                 .unwrap();
-    //             // * Check if file is empty, create empty hashmap
-    //             if contents.to_string().len() == 0 {
-    //                 return Ok(HashMap::new());
-    //             }
-    //             // * Otherwise, return structure created from file, TODO: safe way to check if this works?
-    //             if let Ok(deserialized) = serde_json::from_str(&contents.to_string()) {
-    //                 return Ok(deserialized);
-    //             } else {
-    //                 return Err("Could not deserialize repo file".to_string());
-    //             }
-    //         }
-    //         Err(_) => {
-    //             return Err("Could not open repo file".to_string());
-    //         }
-    //     }
-    // }
+    fn read_from_repo_from_file(dvcs_hidden: &str) -> Result<RepositoryController, String> {
+        // * Open the json file
+        match File::open(dvcs_hidden.to_owned() + "/.dvcs_hidden/repo.json") {
+            Ok(repo_file) => {
+                let mut contents = String::new();
+                // * Creating string from contents in index file
+                repo_file
+                    .borrow()
+                    .read_to_string(&mut contents)
+                    .or_else(|_| {
+                        return Err("No content found in repo file".to_string());
+                    })
+                    .unwrap();
+                // * Check if file is empty, create empty hashmap
+                if contents.to_string().len() == 0 {
+                    return Ok(RepositoryController {
+                        // vector to store the commit history for the repository (could be a hashSet as well)
+                        commit_history: vec![],
+                        // map to store the head commits for each branch in the repository
+                        branch_heads: HashMap::new(),
+
+                        // map to store the commit history for each file in the repository
+                        file_history: HashMap::new(),
+
+                        dvcs_hidden: dvcs_hidden.to_string(),
+                    });
+                }
+                // * Otherwise, return structure created from file, TODO: safe way to check if this works?
+                if let Ok(deserialized) = serde_json::from_str(&contents.to_string()) {
+                    return Ok(deserialized);
+                } else {
+                    return Err("Could not deserialize repo file".to_string());
+                }
+            }
+            Err(_) => {
+                return Err("Could not open repo file".to_string());
+            }
+        }
+    }
 
     // commits the current state of the repository to storage
     fn commit(&mut self, branch: &str, commit_message: String, files: Vec<(String, String)>) {
@@ -98,6 +132,7 @@ impl RepositoryController {
                 .or_insert_with(|| vec![])
                 .push(format!("{}:{}", commit_message, file_content));
         }
+        self.save_locally();
     }
 
     // return the commit log for the repository
@@ -166,12 +201,15 @@ mod tests {
 
     #[test]
     fn temp_test_fn() {
-        let mut repo = RepositoryController {
-            commit_history: Vec::new(),
-            branch_heads: HashMap::new(),
-            file_history: HashMap::new(),
-        };
-        repo.create_repo("./");
+        let mut repo = RepositoryController::new("./");
+        println!("{:?}", &repo);
+
+        //repo.create_repo();
+        repo.as_mut().unwrap().commit(
+            "master3",
+            "Initial commit3".to_string(),
+            vec![("README.md3".to_string(), "Hello, world!3".to_string())],
+        );
     }
 
     #[test]
@@ -180,6 +218,7 @@ mod tests {
             commit_history: Vec::new(),
             branch_heads: HashMap::new(),
             file_history: HashMap::new(),
+            dvcs_hidden: String::from("./"),
         };
         repo.commit("master", "Initial commit".to_string(), vec![]);
         assert_eq!(repo.log(), vec!["Initial commit"]);
@@ -191,6 +230,7 @@ mod tests {
             commit_history: Vec::new(),
             branch_heads: HashMap::new(),
             file_history: HashMap::new(),
+            dvcs_hidden: String::from("./"),
         };
         repo.commit("master", "Initial commit".to_string(), vec![]);
         repo.commit("master", "Second commit".to_string(), vec![]);
@@ -203,6 +243,7 @@ mod tests {
             commit_history: Vec::new(),
             branch_heads: HashMap::new(),
             file_history: HashMap::new(),
+            dvcs_hidden: String::from("./"),
         };
         repo.commit("master", "Initial commit".to_string(), vec![]);
         repo.commit("master", "Second commit".to_string(), vec![]);
@@ -215,6 +256,7 @@ mod tests {
             commit_history: Vec::new(),
             branch_heads: HashMap::new(),
             file_history: HashMap::new(),
+            dvcs_hidden: String::from("./"),
         };
         repo.commit("master", "Initial commit".to_string(), vec![]);
         repo.commit("master", "Second commit".to_string(), vec![]);
@@ -230,6 +272,7 @@ mod tests {
             commit_history: Vec::new(),
             branch_heads: HashMap::new(),
             file_history: HashMap::new(),
+            dvcs_hidden: String::from("./"),
         };
 
         // create a new commit
@@ -252,6 +295,7 @@ mod tests {
             commit_history: Vec::new(),
             branch_heads: HashMap::new(),
             file_history: HashMap::new(),
+            dvcs_hidden: String::from("./"),
         };
 
         // create new commits
@@ -289,6 +333,7 @@ mod tests {
             commit_history: Vec::new(),
             branch_heads: HashMap::new(),
             file_history: HashMap::new(),
+            dvcs_hidden: String::from("./"),
         };
 
         // create a new commit
