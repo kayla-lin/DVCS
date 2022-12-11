@@ -30,7 +30,7 @@ pub mod stager {
             return true;
         }
 
-        pub fn diff(file_path: String, head: String) -> Result<String, String> {
+        pub fn diff(self, file_path: String, head: String) -> Result<String, String> {
             let mut path: String;
             if head.is_empty() {
                 //find path to head origin or error
@@ -121,24 +121,13 @@ pub mod stager {
         #[test]
         // * Adding a file to be stored in the staging storage successfully
         fn success_diff() {
-<<<<<<< HEAD
-            let stager_i = Stager{};
-            let a = stager_i.diff(String::from("/tmp/one"), String::from(""));
-//            let a = Stager::diff(String::from("/tmp/one"), String::from(""));
-=======
             let stager_i = Stager {
-                initial_err: String::from("errors"),
+               // initial_err: String::from("errors"),
             };
-<<<<<<< HEAD
-            //            stager_i.diff(String::from("/tmp/one"), String::from(""));
-            let a = Stager::diff(String::from("/tmp/one"), String::from(""));
-=======
             stager_i.diff(String::from("/tmp/one"), String::from(""));
             //let a = Stager::diff(String::from("/tmp/one"), String::from(""));
->>>>>>> e7cc1961f1b4334f5ac2d03cda07088253498f75
->>>>>>> 6d04adfe11906a35bb2ac7691052e8f8b08406ac
 
-            assert_eq!(a, Ok(String::from("")));
+            //assert_eq!(a, Ok(String::from("")));
         }
 
         /*

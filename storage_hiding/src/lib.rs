@@ -1,7 +1,7 @@
 #[warn(unused_imports)]
 use std::collections::HashMap;
 
-mod repository_storage {
+pub mod repository_storage {
 
     use std::collections::HashMap;
 
