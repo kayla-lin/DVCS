@@ -31,7 +31,7 @@ pub mod stager {
             return true;
         }
 
-        pub fn diff(self, file_path: String, head: String) -> Result<String, String> {
+        pub fn diff(file_path: String, head: String) -> Result<String, String> {
             let mut path: String;
             if head.is_empty() {
                 //find path to head origin or error
@@ -125,10 +125,10 @@ pub mod stager {
             let stager_i = Stager {
                 initial_err: String::from("errors"),
             };
-            stager_i.diff(String::from("/tmp/one"), String::from(""));
-            //let a = Stager::diff(String::from("/tmp/one"), String::from(""));
+            //            stager_i.diff(String::from("/tmp/one"), String::from(""));
+            let a = Stager::diff(String::from("/tmp/one"), String::from(""));
 
-            //assert_eq!(a, Ok(String::from("")));
+            assert_eq!(a, Ok(String::from("")));
         }
 
         /*

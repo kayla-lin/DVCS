@@ -4,5 +4,7 @@ members = [
     "stager",
     "staging",
     "main",
-    "usemods"
+    "usemods",
+    "repo",
+    "storage_hiding"
 ]
