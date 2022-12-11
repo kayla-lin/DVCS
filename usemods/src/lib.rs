@@ -5,22 +5,23 @@ pub mod user_feedback{
     use std::io;
     use std::io::prelude::*;
     
-    pub fn display_all_errors(errors: Vec<String>) {
+    pub fn display_all_errors(errors: Vec<String>) -> bool {
             //errors to iterator
             let error_inter: Vec<String> =  errors.into_iter().collect();
             let mut rng = rand::thread_rng();
             
             //display errors
             error_inter.iter().for_each(|error:&String| println!("{}", error.truecolor(rng.gen(), rng.gen(), rng.gen())));
-        
+            return true;
         }
     
-    pub fn display_first_error(errors: Vec<String>) {
+    pub fn display_first_error(errors: Vec<String>) -> bool {
             println!("{}", errors[0].red());
+            return true;
         }
         
         
-    pub fn format_error_alt(errors: Vec<String>) {
+    pub fn format_error_alt(errors: Vec<String>) -> bool{
             //print every 3 errors and display more when user enters
             fn pause() {
                 let mut stdin = io::stdin();
@@ -40,6 +41,7 @@ pub mod user_feedback{
                 error.to_vec().iter().for_each(|error| println!("{}", error.truecolor(rng.gen(), rng.gen(), rng.gen())));
                 pause();
             });
+            return true;
     
         }
     
@@ -223,6 +225,86 @@ pub mod dir_c{
     }
 }
 
+mod err_handling_tests{
+    use crate::user_feedback::*;
 
+    #[test]
+    fn test_display_first_error(){
+        let test_err = vec!["test error on first err fn".to_string()];
+        let res = display_first_error(test_err);
+        assert_eq!(res, true);
+    }
+    #[test]
+    fn test_display_all_errors(){
+        let test_err = vec!["test error on display all err fn".to_string()];
+        let res = display_all_errors(test_err);
+        assert_eq!(res, true);
+    }
+    #[test]
+    fn test_format_error_alt(){
+        print!("Press any key to continue...\n"); 
+        let test_err = vec!["test error on format err fn".to_string()];
+        let res = format_error_alt(test_err);
+        assert_eq!(res, true);
+    }
+
+
+}
+
+mod user_interaction_tests{
+    use crate::user_interaction::diff_in;
+    use crate::user_interaction::init_in;
+    use crate::user_interaction::status_in;
+    use crate::user_interaction::remove_in;
+    use crate::user_interaction::add_in;
+    
+    
+
+    
+    static mut TEST_PATH: &str = "/tmp/dvcs_test/";
+    #[test]
+    fn init_test_succ(){
+        //create a valid path
+        let test_path = "/tmp/dvcs_test/";
+        let res = init_in(test_path.to_string());
+        assert_eq!(res, true);
+        
+    }
+    #[test]
+    fn init_test_fail(){
+        //create an invalid path
+        let test_path = "/tmp/dvcs_st";
+        let res = init_in(test_path.to_string());
+        assert_eq!(res, false);
+    }
+    #[test]
+
+    fn diff_in_test(){
+        let test_path = "/tmp/dvcs_test/";
+        let res = diff_in(test_path.to_string(), "HEAD".to_string());
+        assert_eq!(res, true);
+    }
+    #[test]
+    fn status_in_test(){
+        let test_path = "/tmp/dvcs_test/";
+        let res = status_in(test_path.to_string());
+        assert_eq!(res, true);
+    }
+
+    #[test]
+    fn remove_in_test(){
+        let test_path = "/tmp/dvcs_test/";
+        let res = remove_in(test_path.to_string());
+        assert_eq!(res, true);
+    }
+    #[test]
+    fn add_in_test(){
+        let test_path = "/tmp/dvcs_test/";
+        let res = add_in(test_path.to_string());
+        assert_eq!(res, true);
+    }
+
+    
+}
 
 
