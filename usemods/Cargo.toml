@@ -12,5 +12,6 @@ rand = "0.8.4"
 clap = { version = "4.0.29", features = ["derive"] }
 stager = {path = "../stager"}
 staging = {path = "../staging"}
+storage_hiding = {path = "../storage_hiding"}
 
 
