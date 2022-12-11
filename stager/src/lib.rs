@@ -14,6 +14,7 @@ pub mod stager {
     impl Repo {}
 
     pub struct Stager {
+        initial_err :String,
         //    staging: Staging,
     }
 
@@ -121,8 +122,8 @@ pub mod stager {
         #[test]
         // * Adding a file to be stored in the staging storage successfully
         fn success_diff() {
-            //        let stager_i = Stager{};
-            //        stager_i.diff(String::from("/tmp/one"), String::from(""));
+            let stager_i = Stager{initial_err:String::from("errors")};
+//            stager_i.diff(String::from("/tmp/one"), String::from(""));
             let a = Stager::diff(String::from("/tmp/one"), String::from(""));
 
             assert_eq!(a, Ok(String::from("")));
