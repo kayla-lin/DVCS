@@ -107,7 +107,8 @@ pub mod user_interaction{
         match res {
             true => {
                 println!("File exists, diffing...");
-                stager::stager::Stager::diff(file_path, head);
+                let stager = stager::stager::Stager{};
+                stager.diff(file_path, head);
                 return true;
             },
             false => {
