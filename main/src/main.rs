@@ -4,7 +4,7 @@ use std::{fs, io};
 use std::fs::File;
 use usemods::dir_c::create_dir_main;
 use usemods::{ *};
-use repository_storage::RepositoryStorage;
+use storage_hiding::repository_storage::{self, RepositoryStorage};
 
 fn main() {
    
@@ -57,6 +57,7 @@ fn main() {
         },
         "new" => {
             let mut repo_storage = RepositoryStorage::new();
+            print!("Repo Storage created");
         },
         _ => {
             println!("Invalid command");

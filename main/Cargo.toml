@@ -9,3 +9,4 @@ edition = "2021"
 staging = { path = "../staging" }
 stager = { path = "../stager" }
 usemods = { path = "../usemods" }
+storage_hiding = { path = "../storage_hiding" }
