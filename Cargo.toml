@@ -4,5 +4,5 @@ members = [
     "stager",
     "staging",
     "main",
-    "usemods"
+    "usemods",
 ]

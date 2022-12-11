@@ -121,17 +121,11 @@ pub mod stager {
         #[test]
         // * Adding a file to be stored in the staging storage successfully
         fn success_diff() {
-<<<<<<< HEAD
-            let stager_i = Stager{};
-            let a = stager_i.diff(String::from("/tmp/one"), String::from(""));
-//            let a = Stager::diff(String::from("/tmp/one"), String::from(""));
-=======
             let stager_i = Stager {
-                initial_err: String::from("errors"),
+               // initial_err: String::from("errors"),
             };
             stager_i.diff(String::from("/tmp/one"), String::from(""));
             //let a = Stager::diff(String::from("/tmp/one"), String::from(""));
->>>>>>> e7cc1961f1b4334f5ac2d03cda07088253498f75
 
             //assert_eq!(a, Ok(String::from("")));
         }
