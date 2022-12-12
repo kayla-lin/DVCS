@@ -166,7 +166,8 @@ pub mod user_interaction{
                 println!("File exists, status...");
                 let status_res = stager::stager::Stager::status(file_path);
 
-                if status_res.is_ok(){
+                if status_res.is_ok() {
+                    print!("{}", status_res.unwrap());
                     return true;
                 }else {
                     println!("Error! File path empty");

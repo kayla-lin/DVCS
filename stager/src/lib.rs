@@ -46,21 +46,26 @@ pub mod stager {
             if file_path.is_empty() {
                 return Err(String::from("empty path"));
             } else {
-                let mut output: String;
-                output = String::from("changed:\n");
-                let staging = Staging::new(DVCS_HIDDEN, file_path.as_str());
+                let mut staging = Staging::new(DVCS_HIDDEN, file_path.as_str()).unwrap();
+
+                staging.update_staged_files();
 
                 let values: Vec<StagedComparison> =
-                    staging.unwrap().get_index().clone().into_values().collect();
-                let update: String = values.iter().fold(output, |mut acc, val| {
-                    let staging_ = val.staging.clone().unwrap();
-                    let other_ = val.working_directory.clone().unwrap();
-                    if staging_.modified != other_.modified
-                        || staging_.created != other_.created
-                        || staging_.mode != other_.mode
-                        || staging_.sha1 != other_.sha1
+                    staging.get_index().clone().into_values().collect();
+                let update: String = values.iter().fold(String::from("changed:\n"), |mut acc, val| {
+                    let staging_ = val.staging.clone();
+                    let other_ = val.working_directory.clone();
+                    if staging_.is_none() || other_.is_none() {return acc;}
+                    print!("debug:\n");
+                    print!("{}", staging_.clone().unwrap().path);
+                    let sta = staging_.clone().unwrap();
+                    let oth = other_.unwrap();
+                    if sta.modified != oth.modified
+                        || sta.created != oth.created
+                        || sta.mode != oth.mode
+                        || sta.sha1 != oth.sha1
                     {
-                        acc.push_str(staging_.path.as_str());
+                        acc.push_str(staging_.clone().unwrap().path.as_str());
                     }
                     return acc;
                 });
