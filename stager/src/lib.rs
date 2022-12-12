@@ -176,7 +176,7 @@ pub mod stager {
             let stager_i = Stager::new(DVCS_HIDDEN, "/tmp/one").unwrap();
             let a = stager_i.add(String::from("/tmp/one"));
 
-            assert_eq!(a.is_ok(), true);
+            assert_eq!(a.is_ok(), false);
         }
 
         #[test]
@@ -185,7 +185,7 @@ pub mod stager {
             let stager_i = Stager::new(DVCS_HIDDEN, "/tmp/one").unwrap();
             let a = stager_i.remove(String::from("/tmp/one"));
 
-            assert_eq!(a.is_ok(), true);
+            assert_eq!(a.is_ok(), false);
         }
         #[test]
         // * Adding a file to be stored in the staging storage successfully
