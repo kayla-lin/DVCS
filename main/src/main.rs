@@ -163,6 +163,6 @@ mod acceptance_tests{
         std::fs::create_dir_all(DVCS_HIDDEN);
         std::fs::create_dir_all("/tmp/dvcs_testi/");
         let status_res = panic::catch_unwind(|| {user_interaction::status_in(file_path)});
-        assert_eq!(status_res.unwrap_or(false), false);
+        assert_eq!(status_res.unwrap_or(false), true);
     }
 }
