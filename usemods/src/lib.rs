@@ -58,12 +58,6 @@ pub mod user_interaction{
     use repo_directory_hiding::merge_states; 
     use repo_directory_hiding::State; 
 
-    pub fn merge_states_in(ancestor: State, ours: State, theirs: State) -> ((Vec<String>, Vec<String>), bool) {
-
-        return ((vec![], vec![]), true);
-
-    }
-    
     pub fn init_in(file_path: String) -> bool {
         //let res = Path::new(&file_path).try_exists().unwrap_or_else(|_| false); 
         match Path::new(&file_path).try_exists().unwrap_or_else(|_| false) {
