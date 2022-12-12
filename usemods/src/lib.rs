@@ -52,6 +52,7 @@ pub mod user_interaction {
 
     use crate::user_feedback::{display_all_errors, display_first_error, format_error_alt};
     use stager;
+    use stager::stager::Stager;
     use std::clone;
     use std::path::{Path, PathBuf};
     use std::{collections::HashMap, fs};
@@ -114,9 +115,16 @@ pub mod user_interaction {
         match Path::new(&file_path).try_exists().unwrap_or_else(|_| false) {
             true => {
                 let fp = file_path.clone();
-                let init_res = stager::stager::Stager::init(file_path);
+                let stager_i = Stager::new("DVCS_HIDDEN", fp.as_str());
+                if stager_i.is_err() {
+                    let t_er = stager_i.unwrap_err();
+                    display_first_error(vec![t_er]);
+                    return false;
+                }
+
+                let init_res = stager_i.unwrap().init(file_path);
                 if init_res.is_err() {
-                    let t_er = "file path: ".to_owned() + &fp.to_string() + " does not exists!";
+                    let t_er = init_res.unwrap_err();
                     display_first_error(vec![t_er]);
                     return false;
                 }
@@ -165,7 +173,55 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, diffing...");
-                let stager = stager::stager::Stager {};
+
+                let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+                if stager_i.is_err() {
+                    let t_er = stager_i.unwrap_err();
+                    display_first_error(vec![t_er]);
+                    return false;
+                }
+                let diff_res = stager_i.unwrap().diff(file_path, head);
+                if diff_res.is_err() {
+                    let t_er = diff_res.unwrap_err();
+                    display_first_error(vec![t_er]);
+                    return false;
+                }
+                return true;
+            }
+            false => {
+                println!("Error!");
+                println!("Which error function do you want to use?");
+                //read console input
+                //match input to error function
+
+                let errchoice = std::io::stdin();
+                println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
+                let mut input = String::new();
+                let errfn = errchoice.read_line(&mut input).unwrap();
+
+                let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
+                match errfn {
+                    1 => {
+                        //display first error
+                        display_first_error(vec![t_er]);
+                        return false;
+                    }
+                    2 => {
+                        //display all errors
+                        display_all_errors(vec![t_er]);
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn diff_in(file_path: String, head: String) -> bool {
+        let res: bool = Path::new(&file_path).try_exists().unwrap_or_else(|_| false);
+        match res {
+            true => {
+                println!("File exists, diffing...");
+                let stager = stager::stager::Stager { staging: todo!() };
                 stager.diff(file_path, head);
                 return true;
             }
@@ -211,9 +267,17 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, status...");
-                let status_res = stager::stager::Stager::status(file_path);
+
+                let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+                if stager_i.is_err() {
+                    let t_er = stager_i.unwrap_err();
+                    display_first_error(vec![t_er]);
+                    return false;
+                }
+                let status_res = stager_i.unwrap().status(file_path);
 
                 if status_res.is_ok() {
+                    print!("{}", status_res.unwrap());
                     return true;
                 } else {
                     println!("Error! File path empty");
@@ -262,11 +326,19 @@ pub mod user_interaction {
         let res: bool = Path::new(&file_path).try_exists().unwrap_or_else(|_| false);
         if res {
             println!("File exists, removing...");
-            let remove_res = stager::stager::Stager::remove(file_path);
+
+            let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+            if stager_i.is_err() {
+                let t_er = stager_i.unwrap_err();
+                display_first_error(vec![t_er]);
+                return false;
+            }
+            let remove_res = stager_i.unwrap().remove(file_path);
             if remove_res.is_ok() {
                 return true;
             } else {
-                println!("Error! File path empty");
+                let err = remove_res.unwrap_err();
+                display_first_error(vec![err]);
                 return false;
             }
         }
@@ -277,11 +349,19 @@ pub mod user_interaction {
         let res: bool = Path::new(&file_path).try_exists().unwrap_or_else(|_| false);
         if res {
             println!("File exists, adding...");
-            let add_res = stager::stager::Stager::add(file_path);
+
+            let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+            if stager_i.is_err() {
+                let t_er = stager_i.unwrap_err();
+                display_first_error(vec![t_er]);
+                return false;
+            }
+            let add_res = stager_i.unwrap().add(file_path);
             if add_res.is_ok() {
                 return true;
             } else {
-                println!("Error! File path empty");
+                let err = add_res.unwrap_err();
+                display_first_error(vec![err]);
                 return false;
             }
         }
