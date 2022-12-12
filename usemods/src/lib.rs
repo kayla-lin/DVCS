@@ -336,20 +336,6 @@ pub mod user_interaction {
     }
 }
 
-pub mod dir_c {
-    use std::fs::File;
-    use std::{fs, io};
-
-    pub fn create_dir_main() -> io::Result<()> {
-        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
-
-        fs::create_dir(DVCS_HIDDEN)?;
-        fs::create_dir("/tmp/dvcs_testi/")?;
-        let file = File::create("/tmp/dvcs_testi/");
-        Ok(())
-    }
-}
-
 mod err_handling_tests {
     use crate::user_feedback::*;
 
