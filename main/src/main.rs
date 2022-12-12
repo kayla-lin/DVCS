@@ -89,7 +89,7 @@ mod acceptance_tests{
 
     //level 1 init -> new instance of a repository in the current directory
     #[test]
-    fn init_test_1(){
+    fn init_test_1a(){
 
         const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
         let file_path = String::from("/tmp/dvcs_testi/");
@@ -101,7 +101,7 @@ mod acceptance_tests{
         
     }
     #[test]
-    fn init_test_2(){
+    fn init_test_1b(){
         //fails 
         const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
         let file_path = String::from("/tmp/dvcs_ti/");
@@ -114,7 +114,7 @@ mod acceptance_tests{
 
     //level 2 add -> add a file to the repository, commit -> commit the current state of the repository, checkout -> checkout a previous commit
     #[test]
-    fn add_test_1(){
+    fn add_test_2a(){
         const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
         let file_path = String::from("/tmp/dvcs_testi/");
         
@@ -126,7 +126,7 @@ mod acceptance_tests{
         assert_eq!(add_res, true);
     }
     #[test]
-    fn add_test_2(){
+    fn add_test_2b(){
         //fails
         const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
         let file_path = String::from("/tmp//");
