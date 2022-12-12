@@ -54,7 +54,15 @@ pub mod user_interaction{
     use stager;
     use std::{path::Path, collections::HashMap};
     use crate::user_feedback::{display_first_error, display_all_errors, format_error_alt};
-    use storage_hiding::repository_storage::{RepositoryStorage, self}; 
+    use storage_hiding::repository_storage::{RepositoryStorage}; 
+    use repo_directory_hiding::merge_states; 
+    use repo_directory_hiding::State; 
+
+    pub fn merge_states_in(ancestor: State, ours: State, theirs: State) -> ((Vec<String>, Vec<String>), bool) {
+
+        return ((vec![], vec![]), true);
+
+    }
     
     pub fn init_in(file_path: String) -> bool {
         //let res = Path::new(&file_path).try_exists().unwrap_or_else(|_| false); 
@@ -214,12 +222,33 @@ pub mod user_interaction{
     }
 
     pub fn remove_in(file_path: String) -> bool{    
-        return stager::stager::Stager::remove(file_path).is_ok();
+        let res: bool = Path::new(&file_path).try_exists().unwrap_or_else(|_| false);
+        if res {
+            println!("File exists, removing...");
+            let remove_res = stager::stager::Stager::remove(file_path);
+            if remove_res.is_ok(){
+                return true;
+            }else {
+                println!("Error! File path empty");
+                return false;
+            }
+        }
+        return true; 
     }
 
     pub fn add_in(file_path: String) -> bool{
-        let res = stager::stager::Stager::add(file_path);
-        return res.is_ok();
+        let res: bool = Path::new(&file_path).try_exists().unwrap_or_else(|_| false);
+        if res {
+            println!("File exists, adding...");
+            let add_res = stager::stager::Stager::add(file_path);
+            if add_res.is_ok(){
+                return true;
+            }else {
+                println!("Error! File path empty");
+                return false;
+            }
+        }
+        return true; 
     }
 
     pub fn see_diff_in(snapshot: &HashMap<String, String>) -> (HashMap<String, String>, bool){

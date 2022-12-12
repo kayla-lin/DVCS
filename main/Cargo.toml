@@ -10,3 +10,5 @@ staging = { path = "../staging" }
 stager = { path = "../stager" }
 usemods = { path = "../usemods" }
 storage_hiding = { path = "../storage_hiding" }
+repo_directory_hiding = { path = "../repo_directory_hiding" }
+
