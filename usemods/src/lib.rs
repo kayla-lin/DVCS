@@ -81,7 +81,11 @@ pub mod user_interaction {
                                         .to_string_lossy()
                                         .to_string();
                                     if name == ".dvcs_hidden" {
-                                        found = head.unwrap().to_string_lossy().to_string();
+                                        found = fs::canonicalize(path.path())
+                                            .unwrap()
+                                            .to_string_lossy()
+                                            .to_string();
+
                                         break;
                                     }
                                 } else {
@@ -227,7 +231,7 @@ pub mod user_interaction {
 
                 let path = file_path.clone();
                 let mut found = String::from("");
-                find_hidden_dvcs_folder(path, found);
+                //find_hidden_dvcs_folder(path, found);
 
                 let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
                 if stager_i.is_err() {
