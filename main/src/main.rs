@@ -81,3 +81,88 @@ fn main() {
         }
     }
 }
+
+
+mod acceptance_tests{
+    use std::panic;
+
+    use staging::staging_storage::Staging;
+    use usemods::user_interaction;
+
+    //level 1 init -> new instance of a repository in the current directory
+    #[test]
+    fn init_test_1a(){
+
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp/dvcs_testi/");
+        
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        let init_res = user_interaction::init_in(file_path);
+        assert_eq!(init_res, true);
+        
+    }
+    #[test]
+    fn init_test_1b(){
+        //fails 
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp/dvcs_ti/");
+
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        let init_res = user_interaction::init_in(file_path);
+        assert_eq!(init_res, false);
+    }
+
+    //level 2 add -> add a file to the repository, commit -> commit the current state of the repository, checkout -> checkout a previous commit
+    #[test]
+    fn add_test_2a(){
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp/dvcs_testi/");
+        
+
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        
+        let add_res = user_interaction::add_in(file_path);
+        assert_eq!(add_res, true);
+    }
+    #[test]
+    fn add_test_2b(){
+        //fails
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp//");
+
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        let add_res = user_interaction::add_in(file_path);
+        assert_eq!(add_res, false);
+    }
+
+    //level 3 status, heads, cat, log
+    #[test]
+    fn status_test_3a(){
+        //pass
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp/dvcs_testi/");
+        
+
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        
+        let status_res = panic::catch_unwind(|| {user_interaction::status_in(file_path)});
+        assert_eq!(status_res.unwrap_or(true), true);
+    }
+
+    #[test]
+    fn status_test_3b(){
+        //fails
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp//");
+
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        let status_res = panic::catch_unwind(|| {user_interaction::status_in(file_path)});
+        assert_eq!(status_res.unwrap_or(false), false);
+    }
+}
