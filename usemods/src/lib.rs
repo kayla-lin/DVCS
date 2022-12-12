@@ -207,7 +207,7 @@ pub mod user_interaction {
             }
             false => {
                 println!("Error!");
-                println!("Which error function do you want to use?");
+                //println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
 
