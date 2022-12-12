@@ -173,54 +173,6 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, diffing...");
-
-                let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
-                if stager_i.is_err() {
-                    let t_er = stager_i.unwrap_err();
-                    display_first_error(vec![t_er]);
-                    return false;
-                }
-                let diff_res = stager_i.unwrap().diff(file_path, head);
-                if diff_res.is_err() {
-                    let t_er = diff_res.unwrap_err();
-                    display_first_error(vec![t_er]);
-                    return false;
-                }
-                return true;
-            }
-            false => {
-                println!("Error!");
-                println!("Which error function do you want to use?");
-                //read console input
-                //match input to error function
-
-                let errchoice = std::io::stdin();
-                println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
-                let mut input = String::new();
-                let errfn = errchoice.read_line(&mut input).unwrap();
-
-                let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
-                match errfn {
-                    1 => {
-                        //display first error
-                        display_first_error(vec![t_er]);
-                        return false;
-                    }
-                    2 => {
-                        //display all errors
-                        display_all_errors(vec![t_er]);
-                        return false;
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn diff_in(file_path: String, head: String) -> bool {
-        let res: bool = Path::new(&file_path).try_exists().unwrap_or_else(|_| false);
-        match res {
-            true => {
-                println!("File exists, diffing...");
                 let stager = stager::stager::Stager { staging: todo!() };
                 stager.diff(file_path, head);
                 return true;
