@@ -58,56 +58,56 @@ pub mod user_interaction {
     use std::{collections::HashMap, fs};
     use storage_hiding::repository_storage::{self, RepositoryStorage};
 
-    pub fn find_hidden_dvcs_folder(current_path: String, mut found_path: String) {
-        match fs::read_dir(Path::new(&current_path)) {
-            Ok(file_entry) => {
-                let mut found: String = "".to_string();
-                if (found_path != "") {
-                    println!("{:?}", found_path.clone());
-                    found = found_path.clone();
-                }
-                // * Loop through each entry in the directory
-                file_entry.into_iter().fold(false, |acc, entry| {
-                    if let Ok(path) = entry {
-                        let path_buffer = path.path();
+    pub fn loop_find(current_path: String) -> Option<String> {
+        let mut found = "".to_string();
+        let mut head = fs::canonicalize(Path::new(&current_path));
 
-                        if let Ok(attributes) = fs::metadata(path_buffer.clone()) {
-                            if attributes.is_dir() {
-                                let name = path_buffer
-                                    .file_name()
-                                    .unwrap()
-                                    .to_string_lossy()
-                                    .to_string();
-                                if (name == ".dvcs_hidden") {
-                                    println!("Found!");
-                                    found = current_path.clone();
-                                    found_path = current_path.clone();
+        while Path::new(&head.as_ref().unwrap().to_string_lossy().to_string())
+            .parent()
+            .is_some()
+        {
+            match fs::read_dir(&head.as_ref().unwrap().to_string_lossy().to_string()) {
+                Ok(file_entry) => {
+                    // * Loop through each entry in the directory
+                    for entry in file_entry {
+                        if let Ok(path) = entry {
+                            let path_buffer = path.path();
+
+                            if let Ok(attributes) = fs::metadata(path_buffer.clone()) {
+                                if attributes.is_dir() {
+                                    let name = path_buffer
+                                        .file_name()
+                                        .unwrap()
+                                        .to_string_lossy()
+                                        .to_string();
+                                    if name == ".dvcs_hidden" {
+                                        found = head.unwrap().to_string_lossy().to_string();
+                                        break;
+                                    }
+                                } else {
                                 }
-                                true
                             } else {
-                                acc
                             }
                         } else {
-                            acc
                         }
-                    } else {
-                        acc
                     }
-                });
-                match fs::canonicalize(Path::new(&current_path)).unwrap().parent() {
-                    Some(path) => {
-                        let parent = path.to_string_lossy().to_string();
-                        if (found != "") {
-                            println!("Found!");
-                            find_hidden_dvcs_folder(parent.clone(), found_path);
-                        }
-                        find_hidden_dvcs_folder(parent.clone(), "".to_string());
-                    }
-                    None => return,
+                    head = fs::canonicalize(
+                        &head
+                            .as_ref()
+                            .clone()
+                            .unwrap()
+                            .parent()
+                            .unwrap()
+                            .to_string_lossy()
+                            .to_string(),
+                    );
                 }
-            }
-            Err(_) => {}
-        };
+                Err(_) => {
+                    break;
+                }
+            };
+        }
+        return Some(found);
     }
 
     pub fn init_in(file_path: String) -> bool {
@@ -173,8 +173,8 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, diffing...");
-                let stager = stager::stager::Stager { staging: todo!() };
-                stager.diff(file_path, head);
+                // let stager = stager::stager::Stager {};
+                //stager.diff(file_path, head);
                 return true;
             }
             false => {
@@ -368,19 +368,14 @@ mod err_handling_tests {
 mod user_interaction_tests {
     use crate::user_interaction::add_in;
     use crate::user_interaction::diff_in;
-    use crate::user_interaction::find_hidden_dvcs_folder;
     use crate::user_interaction::init_in;
+    use crate::user_interaction::loop_find;
     use crate::user_interaction::remove_in;
     use crate::user_interaction::status_in;
 
     #[test]
     fn find_hidden_dvcs_folder_test() {
-        let test_str = "".to_string();
-
-        println!(
-            "TEST: {:?}",
-            find_hidden_dvcs_folder("./".to_string(), test_str)
-        );
+        println!("TEST: {:?}", loop_find("./".to_string()));
     }
 
     static mut TEST_PATH: &str = "/tmp/dvcs_test/";
