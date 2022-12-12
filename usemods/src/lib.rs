@@ -221,7 +221,18 @@ pub mod user_interaction{
     }
 
     pub fn remove_in(file_path: String) -> bool{    
-        return stager::stager::Stager::remove(file_path).is_ok();
+        let res: bool = Path::new(&file_path).try_exists().unwrap_or_else(|_| false);
+        if res {
+            println!("File exists, removing...");
+            let remove_res = stager::stager::Stager::remove(file_path);
+            if remove_res.is_ok(){
+                return true;
+            }else {
+                println!("Error! File path empty");
+                return false;
+            }
+        }
+        return true; 
     }
 
     pub fn add_in(file_path: String) -> bool{
