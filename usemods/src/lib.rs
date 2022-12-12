@@ -173,8 +173,13 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, diffing...");
-                // let stager = stager::stager::Stager {};
-                //stager.diff(file_path, head);
+                let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+                if stager_i.is_err() {
+                    let t_er = stager_i.unwrap_err();
+                    display_first_error(vec![t_er]);
+                    return false;
+                }
+                stager_i.unwrap().diff(file_path, head);
                 return true;
             }
             false => {
@@ -219,6 +224,10 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, status...");
+
+                let path = file_path.clone();
+                let mut found = String::from("");
+                find_hidden_dvcs_folder(path, found);
 
                 let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
                 if stager_i.is_err() {
@@ -324,20 +333,6 @@ pub mod user_interaction {
         //new instance of RepositoryStorage
         let repo = RepositoryStorage::new();
         (repo.see_diff(snapshot), true)
-    }
-}
-
-pub mod dir_c {
-    use std::fs::File;
-    use std::{fs, io};
-
-    pub fn create_dir_main() -> io::Result<()> {
-        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
-
-        fs::create_dir(DVCS_HIDDEN)?;
-        fs::create_dir("/tmp/dvcs_testi/")?;
-        let file = File::create("/tmp/dvcs_testi/");
-        Ok(())
     }
 }
 

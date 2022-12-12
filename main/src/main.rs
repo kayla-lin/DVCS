@@ -4,7 +4,6 @@ use std::io::Stdin;
 use std::panic::catch_unwind;
 use std::{fs, io};
 use storage_hiding::repository_storage::{self, RepositoryStorage};
-use usemods::dir_c::create_dir_main;
 use usemods::*;
 
 fn main() {
@@ -217,6 +216,6 @@ mod acceptance_tests{
         let remove_res = panic::catch_unwind(|| {user_interaction::remove_in(file_path)});
         assert_eq!(remove_res.unwrap_or(true), false);
     }
-    
+
 
 }
