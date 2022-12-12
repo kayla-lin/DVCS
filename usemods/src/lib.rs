@@ -330,7 +330,7 @@ pub mod user_interaction {
                 return false;
             }
         }
-        return true;
+        return false;
     }
 
     pub fn see_diff_in(snapshot: &HashMap<String, String>) -> (HashMap<String, String>, bool) {
@@ -392,13 +392,7 @@ mod user_interaction_tests {
         let res = init_in(test_path.to_string());
         assert_eq!(res, false);
     }
-    #[test]
 
-    fn diff_in_test() {
-        let test_path = "/tmp/dvcs_test/";
-        let res = diff_in(test_path.to_string(), "HEAD".to_string());
-        assert_eq!(res, true);
-    }
     #[test]
     fn status_in_test() {
         let test_path = "/tmp/dvcs_test/";
@@ -414,8 +408,15 @@ mod user_interaction_tests {
     }
     #[test]
     fn add_in_test() {
-        let test_path = "/tmp/dvcs_test/";
+        let test_path = "./working-directory/test.txt";
         let res = add_in(test_path.to_string());
         assert_eq!(res, true);
+    }
+
+    #[test]
+    fn add_in_fail() {
+        let test_path = "./working-directory/test.txt";
+        let res = add_in(test_path.to_string());
+        assert_eq!(res, false);
     }
 }
