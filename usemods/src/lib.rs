@@ -58,12 +58,6 @@ pub mod user_interaction{
     use repo_directory_hiding::merge_states; 
     use repo_directory_hiding::State; 
 
-    pub fn merge_states_in(ancestor: State, ours: State, theirs: State) -> ((Vec<String>, Vec<String>), bool) {
-
-        return ((vec![], vec![]), true);
-
-    }
-    
     pub fn init_in(file_path: String) -> bool {
         //let res = Path::new(&file_path).try_exists().unwrap_or_else(|_| false); 
         match Path::new(&file_path).try_exists().unwrap_or_else(|_| false) {
@@ -256,7 +250,8 @@ pub mod user_interaction{
             if remove_res.is_ok(){
                 return true;
             }else {
-                println!("Error! File path empty");
+                let err = remove_res.unwrap_err();
+                display_first_error(vec![err]);
                 return false;
             }
         }
@@ -278,7 +273,8 @@ pub mod user_interaction{
             if add_res.is_ok(){
                 return true;
             }else {
-                println!("Error! File path empty");
+                let err = add_res.unwrap_err();
+                display_first_error(vec![err]);
                 return false;
             }
         }
