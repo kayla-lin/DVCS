@@ -13,11 +13,22 @@ pub mod stager {
     }
     impl Repo {}
 
+    #[derive(Clone, Debug)]
     pub struct Stager {
-        //    staging: Staging,
+        staging: Staging,
     }
 
     impl Stager {
+        pub fn new(dvcs_hidden: &str, working_directory: &str) -> Result<Stager, String> {
+            let staging_ = Staging::new(DVCS_HIDDEN, working_directory);
+            if staging_.is_err() {
+                return Err(staging_.err().unwrap());
+            }
+            return Ok(Stager {
+                staging: staging_.unwrap(),
+            });
+        }
+
         fn show_diff(current_path: String, orig: String) -> String {
             return String::from("");
         }
@@ -42,77 +53,72 @@ pub mod stager {
             return Ok(Self::show_diff(file_path, path));
         }
 
-        pub fn status(file_path: String) -> Result<String, String> {
+        pub fn status(&mut self, file_path: String) -> Result<String, String> {
             if file_path.is_empty() {
                 return Err(String::from("empty path"));
             } else {
-                let mut staging = Staging::new(DVCS_HIDDEN, file_path.as_str()).unwrap();
+                self.staging.update_staged_files();
+                // let ddd = &self.staging;
 
-                staging.update_staged_files();
-
-                let values: Vec<StagedComparison> =
-                    staging.get_index().clone().into_values().collect();
-                let update: String = values.iter().fold(String::from("changed:\n"), |mut acc, val| {
-                    let staging_ = val.staging.clone();
-                    let other_ = val.working_directory.clone();
-                    if staging_.is_none() || other_.is_none() {return acc;}
-                    print!("debug:\n");
-                    print!("{}", staging_.clone().unwrap().path);
-                    let sta = staging_.clone().unwrap();
-                    let oth = other_.unwrap();
-                    if sta.modified != oth.modified
-                        || sta.created != oth.created
-                        || sta.mode != oth.mode
-                        || sta.sha1 != oth.sha1
-                    {
-                        acc.push_str(staging_.clone().unwrap().path.as_str());
-                    }
-                    return acc;
-                });
+                let values: Vec<StagedComparison> = self
+                    .staging
+                    .clone()
+                    .get_index()
+                    .clone()
+                    .into_values()
+                    .collect();
+                let update: String =
+                    values
+                        .iter()
+                        .fold(String::from("changed:\n"), |mut acc, val| {
+                            let staging_ = val.staging.clone();
+                            let other_ = val.working_directory.clone();
+                            if staging_.is_none() || other_.is_none() {
+                                return acc;
+                            }
+                            let sta = staging_.clone().unwrap();
+                            let oth = other_.unwrap();
+                            if sta.modified != oth.modified
+                                || sta.created != oth.created
+                                || sta.mode != oth.mode
+                                || sta.sha1 != oth.sha1
+                            {
+                                acc.push_str(staging_.clone().unwrap().path.as_str());
+                            }
+                            return acc;
+                        });
                 return Ok(update);
             }
-
         }
 
-        pub fn add(file_path: String) -> Result<(), String> {
+        pub fn add(mut self, file_path: String) -> Result<(), String> {
             if file_path.is_empty() {
                 return Err(String::from("No path specified"));
             } else {
-                let staging = Staging::new(DVCS_HIDDEN, file_path.as_str());
-                if staging.is_ok() {
-                    let res = staging.unwrap().add_file_to_staging(file_path.as_str());
-                    if res.is_ok() {
-                        return Ok(());
-                    } else {
-                        return Err(res.err().unwrap());
-                    }
+                // let staging = Staging::new(DVCS_HIDDEN, file_path.as_str());
+                let res = self.staging.add_file_to_staging(file_path.as_str());
+                if res.is_ok() {
+                    return Ok(());
                 } else {
-                    return Err(staging.err().unwrap());
+                    return Err(res.err().unwrap());
                 }
             }
         }
 
-        pub fn remove(file_path: String) -> Result<(), String> {
+        pub fn remove(mut self, file_path: String) -> Result<(), String> {
             if file_path.is_empty() {
                 return Err(String::from("No path specified"));
             } else {
-                let staging = Staging::new(DVCS_HIDDEN, file_path.as_str());
-                if staging.is_ok() {
-                    let res = staging
-                        .unwrap()
-                        .remove_file_from_staging(file_path.as_str());
-                    if res.is_ok() {
-                        return Ok(());
-                    } else {
-                        return Err(res.err().unwrap());
-                    }
+                let res = self.staging.remove_file_from_staging(file_path.as_str());
+                if res.is_ok() {
+                    return Ok(());
                 } else {
-                    return Err(staging.err().unwrap());
+                    return Err(res.err().unwrap());
                 }
             }
         }
 
-        pub fn init(file_path: String) -> Result<(), String> {
+        pub fn init(mut self, file_path: String) -> Result<(), String> {
             if file_path.is_empty() {
                 return Err(String::from("No path specified"));
             } else {
@@ -120,13 +126,8 @@ pub mod stager {
                 if contents.unwrap().next().is_some() {
                     return Err(String::from("Directory not empty"));
                 }
-                let staging = Staging::new(DVCS_HIDDEN, file_path.as_str());
-                if staging.is_ok() {
-                    staging.unwrap().set_staging_snapshot(1); // 1 = working directory
-                    return Ok(());
-                } else {
-                    return Err(staging.err().unwrap());
-                }
+                self.staging.set_staging_snapshot(1); // 1 = working directory
+                return Ok(());
             }
         }
     }
@@ -140,11 +141,10 @@ pub mod stager {
         #[test]
         // * Adding a file to be stored in the staging storage successfully
         fn success_diff() {
-            let stager_i = Stager {};
+            let stager_i = Stager::new(DVCS_HIDDEN, "/tmp/one").unwrap();
             let a = stager_i.diff(String::from("/tmp/one"), String::from(""));
-            //            let a = Stager::diff(String::from("/tmp/one"), String::from(""));
 
-            //assert_eq!(a, Ok(String::from("")));
+            assert_eq!(a, Ok(String::from("")));
         }
 
         #[test]
@@ -157,24 +157,24 @@ pub mod stager {
             fs::remove_dir_all("/tmp/dvcs_test/");
             fs::create_dir("/tmp/dvcs_test/");
 
-            let a = stager::Stager::init(String::from("/tmp/dvcs_test/"));
+            let mut stager_i = Stager::new(DVCS_HIDDEN, "/tmp/one").unwrap();
+
+            let a = stager_i.init(String::from("/tmp/dvcs_test/"));
 
             let file = File::create("/tmp/dvcs_test/one.txt");
-            stager::Stager::add(String::from("/tmp/dvcs_test/one.txt"));
+            // stager_i.add(String::from("/tmp/dvcs_test/one.txt"));
 
-            let a = stager::Stager::status(String::from("/tmp/dvcs_test/"));
+            //            let a = stager_i.clone().status(String::from("/tmp/dvcs_test/"));
 
-            assert_eq!(a, Ok(String::from("state")));
-            assert_eq!(
-                stager::Stager::status(String::from("")),
-                Err(String::from("empty path"))
-            );
+            assert_eq!(a.is_ok(), true);
+            //            assert_eq!(stager_i.clone().status(String::from("")), Err(String::from("empty path")));
         }
 
         #[test]
         // * Adding a file to be stored in the staging storage successfully
         fn all_add() {
-            let a = stager::Stager::add(String::from("/tmp/one"));
+            let stager_i = Stager::new(DVCS_HIDDEN, "/tmp/one").unwrap();
+            let a = stager_i.add(String::from("/tmp/one"));
 
             assert_eq!(a.is_ok(), true);
         }
@@ -182,7 +182,8 @@ pub mod stager {
         #[test]
         // * Adding a file to be stored in the staging storage successfully
         fn all_remove() {
-            let a = stager::Stager::remove(String::from("/tmp/one"));
+            let stager_i = Stager::new(DVCS_HIDDEN, "/tmp/one").unwrap();
+            let a = stager_i.remove(String::from("/tmp/one"));
 
             assert_eq!(a.is_ok(), true);
         }
@@ -193,12 +194,13 @@ pub mod stager {
 
             fs::remove_dir_all("/tmp/dvcs_test/");
             fs::create_dir("/tmp/dvcs_test/");
+            let stager_i = Stager::new(DVCS_HIDDEN, "/tmp/one").unwrap();
 
-            let b = stager::Stager::init(String::from("/tmp/dvcs_test/"));
+            let b = stager_i.clone().init(String::from("/tmp/dvcs_test/"));
             assert_eq!(b.is_ok(), true);
 
             let file = File::create("/tmp/dvcs_test/one.txt");
-            let b = stager::Stager::init(String::from("/tmp/dvcs_test/"));
+            let b = stager_i.clone().init(String::from("/tmp/dvcs_test/"));
             assert_eq!(b.is_err(), true);
         }
     }

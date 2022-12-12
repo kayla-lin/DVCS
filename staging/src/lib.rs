@@ -32,7 +32,7 @@ pub mod staging_storage {
     }
 
     /// Staging storage hiding module
-    #[derive(Serialize, Deserialize)]
+    #[derive(Serialize, Deserialize, Clone, Debug)]
     pub struct Staging {
         /**
         Path to the hidden folder with the DVCS repository information
@@ -94,7 +94,12 @@ pub mod staging_storage {
             };
         }
 
-        
+/*         pub fn clone(&self) -> Staging {
+            return Staging {
+            dvcs_hidden : self.dvcs_hidden,
+            working_directory: self.working_directory,
+            index: self.index.clone(),}
+        }*/
 
 
         pub fn get_index(self) -> HashMap<String, StagedComparison> {
