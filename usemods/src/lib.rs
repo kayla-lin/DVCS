@@ -111,7 +111,11 @@ pub mod user_interaction {
                 }
             };
         }
+        if !found.is_empty() {
         return Some(found);
+        } else {
+            return None;
+        }
     }
 
     pub fn init_in(file_path: String) -> bool {
@@ -119,7 +123,9 @@ pub mod user_interaction {
         match Path::new(&file_path).try_exists().unwrap_or_else(|_| false) {
             true => {
                 let fp = file_path.clone();
-                let stager_i = Stager::new("DVCS_HIDDEN", fp.as_str());
+                let mut fp_hidden = file_path.clone();
+                fp_hidden.push_str("/.dvcs_hidden");
+                let stager_i = Stager::new(fp_hidden.as_str(), fp.as_str());
                 if stager_i.is_err() {
                     let t_er = stager_i.unwrap_err();
                     display_first_error(vec![t_er]);
@@ -137,7 +143,7 @@ pub mod user_interaction {
             }
             false => {
                 println!("Error!");
-                println!("Which error function do you want to use?");
+                /* println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
                 let errchoice = std::io::stdin();
@@ -167,7 +173,9 @@ pub mod user_interaction {
                         display_all_errors(vec![t_er]);
                         return false;
                     }
-                }
+                } */
+                display_all_errors( vec!["file path: ".to_owned() + &file_path.to_string() + " does not exists!"]);
+                return false;
             }
         }
     }
@@ -177,7 +185,17 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, diffing...");
-                let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+
+                let fp1 = file_path.clone();
+                let dvcs_hidden = loop_find(fp1);
+                if dvcs_hidden.is_none() {
+                    println!("not a git repository (or any of the parent directories)");
+                    return false;
+                }
+
+                let fp = file_path.clone();
+
+                let stager_i = Stager::new(dvcs_hidden.unwrap().as_str(), file_path.as_str());
                 if stager_i.is_err() {
                     let t_er = stager_i.unwrap_err();
                     display_first_error(vec![t_er]);
@@ -188,17 +206,18 @@ pub mod user_interaction {
             }
             false => {
                 println!("Error!");
-                println!("Which error function do you want to use?");
+                //println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
 
-                let errchoice = std::io::stdin();
+               /*  let errchoice = std::io::stdin();
                 println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
                 let mut input = String::new();
-                let errfn = errchoice.read_line(&mut input).unwrap();
+                let errfn = errchoice.read_line(&mut input).unwrap(); */
 
-                let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
-                match errfn {
+                display_all_errors( vec!["file path: ".to_owned() + &file_path.to_string() + " does not exists!"]);
+                return false;
+                /* match errfn {
                     1 => {
                         //display first error
                         display_first_error(vec![t_er]);
@@ -218,8 +237,8 @@ pub mod user_interaction {
                         //display first error
                         display_all_errors(vec![t_er]);
                         return false;
-                    }
-                }
+                    } 
+                } */
             }
         }
     }
@@ -233,7 +252,17 @@ pub mod user_interaction {
                 let mut found = String::from("");
                 //find_hidden_dvcs_folder(path, found);
 
-                let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+                let fp1 = file_path.clone();
+                let dvcs_hidden = loop_find(fp1);
+                if dvcs_hidden.is_none() {
+                    println!("not a git repository (or any of the parent directories)");
+                    return false;
+                }
+
+                let fp = file_path.clone();
+
+                let stager_i = Stager::new(dvcs_hidden.unwrap().as_str(), file_path.as_str());
+
                 if stager_i.is_err() {
                     let t_er = stager_i.unwrap_err();
                     display_first_error(vec![t_er]);
@@ -251,7 +280,7 @@ pub mod user_interaction {
             }
             false => {
                 println!("Error!");
-                println!("Which error function do you want to use?");
+                /* println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
 
@@ -282,7 +311,9 @@ pub mod user_interaction {
                         display_all_errors(vec![t_er]);
                         return false;
                     }
-                }
+                } */
+                display_all_errors( vec!["file path: ".to_owned() + &file_path.to_string() + " does not exists!"]);
+                return false;
             }
         }
     }
@@ -292,7 +323,17 @@ pub mod user_interaction {
         if res {
             println!("File exists, removing...");
 
-            let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+            let fp1 = file_path.clone();
+            let dvcs_hidden = loop_find(fp1);
+            if dvcs_hidden.is_none() {
+                println!("not a git repository (or any of the parent directories)");
+                return false;
+            }
+
+            let fp = file_path.clone();
+
+            let stager_i = Stager::new(dvcs_hidden.unwrap().as_str(), file_path.as_str());
+            
             if stager_i.is_err() {
                 let t_er = stager_i.unwrap_err();
                 display_first_error(vec![t_er]);
@@ -315,7 +356,17 @@ pub mod user_interaction {
         if res {
             println!("File exists, adding...");
 
-            let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+            let fp1 = file_path.clone();
+            let dvcs_hidden = loop_find(fp1);
+            if dvcs_hidden.is_none() {
+                println!("not a git repository (or any of the parent directories)");
+                return false;
+            }
+
+            let fp = file_path.clone();
+
+            let stager_i = Stager::new(dvcs_hidden.unwrap().as_str(), file_path.as_str());
+            
             if stager_i.is_err() {
                 let t_er = stager_i.unwrap_err();
                 display_first_error(vec![t_er]);
