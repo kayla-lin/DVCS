@@ -165,4 +165,58 @@ mod acceptance_tests{
         let status_res = panic::catch_unwind(|| {user_interaction::status_in(file_path)});
         assert_eq!(status_res.unwrap_or(false), true);
     }
+
+    //level 4 diff, remove 
+    #[test]
+    fn diff_test_4a(){
+        //pass
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp/dvcs_testi/");
+        let head = String::from("HEAD");
+
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        
+        let diff_res = panic::catch_unwind(|| {user_interaction::diff_in(file_path, head)});
+        assert_eq!(diff_res.unwrap_or(true), true);
+    }
+    #[test]
+    fn diff_test_4b(){
+        //fails 
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp/dvcsesti/");
+        let head = String::from("HEAD");
+
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        
+        let diff_res = panic::catch_unwind(|| {user_interaction::diff_in(file_path, head)});
+        assert_eq!(diff_res.unwrap_or(true), false);
+    }
+    #[test]
+    fn remove_test_4c(){
+        //pass
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp/dvcs_testi/");
+
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        
+        let remove_res = panic::catch_unwind(|| {user_interaction::remove_in(file_path)});
+        assert_eq!(remove_res.unwrap_or(true), true);
+    }
+    #[test]
+    fn remove_test_4d(){
+        //fails
+        const DVCS_HIDDEN: &str = "/tmp/dvcs_team";
+        let file_path = String::from("/tmp/");
+
+        std::fs::create_dir_all(DVCS_HIDDEN);
+        std::fs::create_dir_all("/tmp/dvcs_testi/");
+        
+        let remove_res = panic::catch_unwind(|| {user_interaction::remove_in(file_path)});
+        assert_eq!(remove_res.unwrap_or(true), false);
+    }
+    
+
 }

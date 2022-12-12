@@ -229,7 +229,8 @@ pub mod user_interaction{
             if remove_res.is_ok(){
                 return true;
             }else {
-                println!("Error! File path empty");
+                let err = remove_res.unwrap_err();
+                display_first_error(vec![err]);
                 return false;
             }
         }
@@ -244,7 +245,8 @@ pub mod user_interaction{
             if add_res.is_ok(){
                 return true;
             }else {
-                println!("Error! File path empty");
+                let err = add_res.unwrap_err();
+                display_first_error(vec![err]);
                 return false;
             }
         }
