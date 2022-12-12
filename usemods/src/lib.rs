@@ -173,8 +173,13 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, diffing...");
-                let stager = stager::stager::Stager { staging: todo!() };
-                stager.diff(file_path, head);
+                let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+                if stager_i.is_err() {
+                    let t_er = stager_i.unwrap_err();
+                    display_first_error(vec![t_er]);
+                    return false;
+                }
+                stager_i.unwrap().diff(file_path, head);
                 return true;
             }
             false => {
@@ -219,6 +224,10 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, status...");
+
+                let path = file_path.clone();
+                let mut found = String::from("");
+                find_hidden_dvcs_folder(path, found);
 
                 let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
                 if stager_i.is_err() {
