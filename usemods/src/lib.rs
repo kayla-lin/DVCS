@@ -143,7 +143,7 @@ pub mod user_interaction {
             }
             false => {
                 println!("Error!");
-                println!("Which error function do you want to use?");
+                /* println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
                 let errchoice = std::io::stdin();
@@ -173,7 +173,9 @@ pub mod user_interaction {
                         display_all_errors(vec![t_er]);
                         return false;
                     }
-                }
+                } */
+                display_all_errors( vec!["file path: ".to_owned() + &file_path.to_string() + " does not exists!"]);
+                return false;
             }
         }
     }
@@ -204,17 +206,18 @@ pub mod user_interaction {
             }
             false => {
                 println!("Error!");
-                println!("Which error function do you want to use?");
+                //println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
 
-                let errchoice = std::io::stdin();
+               /*  let errchoice = std::io::stdin();
                 println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
                 let mut input = String::new();
-                let errfn = errchoice.read_line(&mut input).unwrap();
+                let errfn = errchoice.read_line(&mut input).unwrap(); */
 
-                let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
-                match errfn {
+                display_all_errors( vec!["file path: ".to_owned() + &file_path.to_string() + " does not exists!"]);
+                return false;
+                /* match errfn {
                     1 => {
                         //display first error
                         display_first_error(vec![t_er]);
@@ -234,8 +237,8 @@ pub mod user_interaction {
                         //display first error
                         display_all_errors(vec![t_er]);
                         return false;
-                    }
-                }
+                    } 
+                } */
             }
         }
     }
@@ -277,7 +280,7 @@ pub mod user_interaction {
             }
             false => {
                 println!("Error!");
-                println!("Which error function do you want to use?");
+                /* println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
 
@@ -308,7 +311,9 @@ pub mod user_interaction {
                         display_all_errors(vec![t_er]);
                         return false;
                     }
-                }
+                } */
+                display_all_errors( vec!["file path: ".to_owned() + &file_path.to_string() + " does not exists!"]);
+                return false;
             }
         }
     }
