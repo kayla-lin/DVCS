@@ -4,9 +4,9 @@ pub mod staging_storage {
     use sha1::{Digest, Sha1};
     use std::borrow::Borrow;
     use std::collections::HashMap;
-    use std::fs::{self, File, Metadata};
+    use std::fs::Metadata;
+    use std::fs::{self, File};
     use std::io::{self, Read};
-    use std::os::unix::prelude::MetadataExt;
     use std::path::Path;
     use std::time::SystemTime;
 
@@ -17,7 +17,6 @@ pub mod staging_storage {
         pub modified: String,
         pub created: String,
         pub accessed: String,
-        pub mode: String,
         pub read_only: String,
         pub is_file: String,
         pub sha1: String,
@@ -244,7 +243,6 @@ pub mod staging_storage {
                 if let Ok(created) = created {
                     if let Ok(modified) = modified {
                         return Ok(StagedData {
-                            mode: metadata.mode().to_string(),
                             read_only: metadata.permissions().readonly().to_string(),
                             is_file: metadata.is_file().to_string(),
                             modified,
