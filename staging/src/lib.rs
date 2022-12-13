@@ -506,6 +506,7 @@ pub mod staging_storage {
         fn test_add_file_to_staging_fail() {
             let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
             let file = staging.add_file_to_staging("./src/working-directory/folder 1/test2.xyz123");
+            println!("{:?}", file);
             assert_eq!(file.is_err(), true);
         }
 
