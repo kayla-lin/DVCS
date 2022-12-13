@@ -309,12 +309,7 @@ pub mod staging_storage {
                                             Ok(data) => Some(data),
                                             Err(_) => None,
                                         };
-                                        if data.is_none() {
-                                            return Err(
-                                                "Could not create data from given parameters"
-                                                    .to_string(),
-                                            );
-                                        }
+
                                         match kind {
                                             0 => StagedComparison {
                                                 working_directory: None,
@@ -338,7 +333,7 @@ pub mod staging_storage {
                         }
                         Err(err) => return Err(err),
                     }
-                    return Err("Could not create data from given parameters".to_string());
+                    Ok(())
                 }
                 // * If file cannot be found set the index as a blank
                 Err(_) => {
@@ -485,7 +480,7 @@ pub mod staging_storage {
         // * Adding a file to be stored in the staging storage successfully
         fn test_add_file_to_staging_success() {
             let mut staging = Staging::new("./src/repo", "./src/working-directory").unwrap();
-            let file = staging.add_file_to_staging("./src/working-directory/folder 1/test2.txt");
+            let file = staging.add_file_to_staging("./src/working-directory/file.txt");
             assert_eq!(file.is_ok(), true);
         }
 

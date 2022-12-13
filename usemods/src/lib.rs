@@ -160,8 +160,8 @@ pub mod user_interaction {
                 return true;
             }
             false => {
-                println!("Error!");
-                println!("Which error function do you want to use?");
+                //println!("Error!");
+                //println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
 
@@ -229,8 +229,8 @@ pub mod user_interaction {
                 return true;
             }
             false => {
-                println!("Error!");
-                println!("Which error function do you want to use?");
+                //println!("Error!");
+                //println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
 
@@ -309,8 +309,8 @@ pub mod user_interaction {
                 }
             }
             false => {
-                println!("Error!");
-                println!("Which error function do you want to use?");
+                //println!("Error!");
+                //println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
 
@@ -419,6 +419,8 @@ pub mod user_interaction {
                 return false;
             }
         }
+        let test_err = vec!["file path not found".to_string()];
+        display_first_error(test_err);
         return false;
     }
 
