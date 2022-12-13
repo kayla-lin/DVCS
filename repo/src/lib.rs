@@ -7,7 +7,7 @@ use std::io::Read;
 use std::path::Path;
 
 #[derive(Debug, Deserialize, Serialize)]
-struct RepositoryController {
+pub struct RepositoryController {
     // vector to store the commit history for the repository (could be a hashSet as well)
     commit_history: Vec<String>,
 
@@ -23,7 +23,7 @@ struct RepositoryController {
 
 impl RepositoryController {
     /// Creates dvcs hidden folder and repo
-    fn new(dvcs_hidden: &str) -> Result<RepositoryController, String> {
+    pub fn new(dvcs_hidden: &str) -> Result<RepositoryController, String> {
         let dvcs_hidden = dvcs_hidden;
         match Path::new(&dvcs_hidden).try_exists() {
             // * Repository cannot be found with given dvcs hidden path

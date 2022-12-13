@@ -94,13 +94,12 @@ pub mod staging_storage {
             };
         }
 
-/*         pub fn clone(&self) -> Staging {
+        /*         pub fn clone(&self) -> Staging {
             return Staging {
             dvcs_hidden : self.dvcs_hidden,
             working_directory: self.working_directory,
             index: self.index.clone(),}
         }*/
-
 
         pub fn get_index(self) -> HashMap<String, StagedComparison> {
             self.index
@@ -117,9 +116,9 @@ pub mod staging_storage {
                         if self
                             .add_staged_data(&staging.unwrap().path, 1, true)
                             .is_ok()
-//                            && self
-//                                .add_staged_data(&staging.unwrap().path, 0, false)
-//                                .is_ok()
+                        //                            && self
+                        //                                .add_staged_data(&staging.unwrap().path, 0, false)
+                        //                                .is_ok()
                         {
                             return (self.write_to_staging_file(), Some(val));
                         }

@@ -20,7 +20,7 @@ pub mod stager {
 
     impl Stager {
         pub fn new(dvcs_hidden: &str, working_directory: &str) -> Result<Stager, String> {
-            let staging_ = Staging::new(DVCS_HIDDEN, working_directory);
+            let staging_ = Staging::new(dvcs_hidden, working_directory);
             if staging_.is_err() {
                 return Err(staging_.err().unwrap());
             }
@@ -124,7 +124,7 @@ pub mod stager {
             } else {
                 let contents: Result<fs::ReadDir, io::Error> = fs::read_dir(&file_path);
                 if contents.unwrap().next().is_some() {
-                    return Err(String::from("Directory not empty"));
+                    return Ok(());
                 }
                 self.staging.set_staging_snapshot(1); // 1 = working directory
                 return Ok(());
@@ -201,7 +201,7 @@ pub mod stager {
 
             let file = File::create("/tmp/dvcs_test/one.txt");
             let b = stager_i.clone().init(String::from("/tmp/dvcs_test/"));
-            assert_eq!(b.is_err(), true);
+            assert_eq!(b.is_ok(), true);
         }
     }
 }

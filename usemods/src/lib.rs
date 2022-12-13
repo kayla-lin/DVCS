@@ -51,6 +51,7 @@ pub mod user_feedback {
 pub mod user_interaction {
 
     use crate::user_feedback::{display_all_errors, display_first_error, format_error_alt};
+    use repo::RepositoryController;
     use stager;
     use stager::stager::Stager;
     use std::clone;
@@ -58,9 +59,17 @@ pub mod user_interaction {
     use std::{collections::HashMap, fs};
     use storage_hiding::repository_storage::{self, RepositoryStorage};
 
-    pub fn loop_find(current_path: String) -> Option<String> {
+    pub fn loop_find(current_path: String) -> Option<(String, String)> {
         let mut found = "".to_string();
+        let mut found_parent = "".to_string();
+
         let mut head = fs::canonicalize(Path::new(&current_path));
+
+        if (Path::new(&current_path).parent().unwrap().is_dir()
+            && Path::new(&current_path).is_file())
+        {
+            head = Ok(Path::new(&current_path).parent().unwrap().to_path_buf());
+        }
 
         while Path::new(&head.as_ref().unwrap().to_string_lossy().to_string())
             .parent()
@@ -86,6 +95,12 @@ pub mod user_interaction {
                                             .to_string_lossy()
                                             .to_string();
 
+                                        found_parent =
+                                            fs::canonicalize(path.path().parent().unwrap())
+                                                .unwrap()
+                                                .to_string_lossy()
+                                                .to_string();
+
                                         break;
                                     }
                                 } else {
@@ -110,21 +125,30 @@ pub mod user_interaction {
                     break;
                 }
             };
+            if found != "".to_string() {
+                return Some((found, found_parent));
+            } else {
+                return None;
+            }
         }
-        return Some(found);
+        if found != "".to_string() {
+            return Some((found, found_parent));
+        } else {
+            return None;
+        }
     }
 
     pub fn init_in(file_path: String) -> bool {
         //let res = Path::new(&file_path).try_exists().unwrap_or_else(|_| false);
         match Path::new(&file_path).try_exists().unwrap_or_else(|_| false) {
             true => {
+                // * create hidden directory
+                std::fs::create_dir_all(file_path.clone() + "/.dvcs_hidden");
+
                 let fp = file_path.clone();
-                let stager_i = Stager::new("DVCS_HIDDEN", fp.as_str());
-                if stager_i.is_err() {
-                    let t_er = stager_i.unwrap_err();
-                    display_first_error(vec![t_er]);
-                    return false;
-                }
+                let fp_2 = file_path.clone();
+
+                let stager_i = Stager::new(&(fp + "/.dvcs_hidden"), &file_path.clone());
 
                 let init_res = stager_i.unwrap().init(file_path);
                 if init_res.is_err() {
@@ -132,7 +156,7 @@ pub mod user_interaction {
                     display_first_error(vec![t_er]);
                     return false;
                 }
-                println!("Initialized empty dvcs repository in {}", &fp);
+                println!("Initialized empty dvcs repository in {}", &fp_2.clone());
                 return true;
             }
             false => {
@@ -140,34 +164,39 @@ pub mod user_interaction {
                 println!("Which error function do you want to use?");
                 //read console input
                 //match input to error function
-                let errchoice = std::io::stdin();
-                println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
-                let mut input = String::new();
-                let errfn = errchoice.read_line(&mut input).unwrap();
 
                 let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
-                match errfn {
-                    1 => {
-                        //display first error
-                        display_first_error(vec![t_er]);
-                        return false;
-                    }
-                    2 => {
-                        //display all errors
-                        display_all_errors(vec![t_er]);
-                        return false;
-                    }
-                    3 => {
-                        //display errors in chunks
-                        format_error_alt(vec![t_er]);
-                        return false;
-                    }
-                    _ => {
-                        //display first error
-                        display_all_errors(vec![t_er]);
-                        return false;
-                    }
-                }
+                display_all_errors(vec![t_er]);
+                return false;
+
+                // let errchoice = std::io::stdin();
+                // println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
+                // let mut input = String::new();
+                // let errfn = errchoice.read_line(&mut input).unwrap();
+
+                // let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
+                // match errfn {
+                //     1 => {
+                //         //display first error
+                //         display_first_error(vec![t_er]);
+                //         return false;
+                //     }
+                //     2 => {
+                //         //display all errors
+                //         display_all_errors(vec![t_er]);
+                //         return false;
+                //     }
+                //     3 => {
+                //         //display errors in chunks
+                //         format_error_alt(vec![t_er]);
+                //         return false;
+                //     }
+                //     _ => {
+                //         //display first error
+                //         display_all_errors(vec![t_er]);
+                //         return false;
+                //     }
+                // }
             }
         }
     }
@@ -177,7 +206,20 @@ pub mod user_interaction {
         match res {
             true => {
                 println!("File exists, diffing...");
-                let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+
+                let fp1 = file_path.clone();
+                let dvcs_hidden = loop_find(fp1);
+                if dvcs_hidden.is_none() {
+                    println!("not a git repository (or any of the parent directories)");
+                    return false;
+                }
+
+                let fp = file_path.clone();
+
+                let stager_i = Stager::new(
+                    loop_find(file_path.clone()).unwrap().0.as_str(),
+                    loop_find(file_path.clone()).unwrap().1.as_str(),
+                );
                 if stager_i.is_err() {
                     let t_er = stager_i.unwrap_err();
                     display_first_error(vec![t_er]);
@@ -192,34 +234,38 @@ pub mod user_interaction {
                 //read console input
                 //match input to error function
 
-                let errchoice = std::io::stdin();
-                println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
-                let mut input = String::new();
-                let errfn = errchoice.read_line(&mut input).unwrap();
-
                 let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
-                match errfn {
-                    1 => {
-                        //display first error
-                        display_first_error(vec![t_er]);
-                        return false;
-                    }
-                    2 => {
-                        //display all errors
-                        display_all_errors(vec![t_er]);
-                        return false;
-                    }
-                    3 => {
-                        //display errors in chunks
-                        format_error_alt(vec![t_er]);
-                        return false;
-                    }
-                    _ => {
-                        //display first error
-                        display_all_errors(vec![t_er]);
-                        return false;
-                    }
-                }
+                display_all_errors(vec![t_er]);
+                return false;
+
+                // let errchoice = std::io::stdin();
+                // println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
+                // let mut input = String::new();
+                // let errfn = errchoice.read_line(&mut input).unwrap();
+
+                // let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
+                // match errfn {
+                //     1 => {
+                //         //display first error
+                //         display_first_error(vec![t_er]);
+                //         return false;
+                //     }
+                //     2 => {
+                //         //display all errors
+                //         display_all_errors(vec![t_er]);
+                //         return false;
+                //     }
+                //     3 => {
+                //         //display errors in chunks
+                //         format_error_alt(vec![t_er]);
+                //         return false;
+                //     }
+                //     _ => {
+                //         //display first error
+                //         display_all_errors(vec![t_er]);
+                //         return false;
+                //     }
+                // }
             }
         }
     }
@@ -233,7 +279,20 @@ pub mod user_interaction {
                 let mut found = String::from("");
                 //find_hidden_dvcs_folder(path, found);
 
-                let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+                let fp1 = file_path.clone();
+                let dvcs_hidden = loop_find(fp1);
+                if dvcs_hidden.is_none() {
+                    println!("not a git repository (or any of the parent directories)");
+                    return false;
+                }
+
+                let fp = file_path.clone();
+
+                let stager_i = Stager::new(
+                    loop_find(file_path.clone()).unwrap().0.as_str(),
+                    loop_find(file_path.clone()).unwrap().1.as_str(),
+                );
+
                 if stager_i.is_err() {
                     let t_er = stager_i.unwrap_err();
                     display_first_error(vec![t_er]);
@@ -255,35 +314,37 @@ pub mod user_interaction {
                 //read console input
                 //match input to error function
 
-                let errchoice = std::io::stdin();
-                println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
-                let mut input = String::new();
-                let errfn = errchoice.read_line(&mut input).unwrap();
-
                 let t_er = "file path: ".to_owned() + &file_path.to_string() + " does not exists!";
-                match errfn {
-                    1 => {
-                        //display first error
-                        display_first_error(vec![t_er]);
-                        return false;
-                    }
-                    2 => {
-                        //display all errors
-                        display_all_errors(vec![t_er]);
-                        return false;
-                    }
-                    3 => {
-                        //display errors in chunks
-                        format_error_alt(vec![t_er]);
-                        return false;
-                    }
-                    _ => {
-                        //display first error
-                        display_all_errors(vec![t_er]);
-                        return false;
-                    }
-                }
-            }
+                display_all_errors(vec![t_er]);
+                return false;
+            } //     let errchoice = std::io::stdin();
+              //     println!("\n1. Display first error\n2. Display all errors\n3. Display errors in chunks\n");
+              //     let mut input = String::new();
+              //     let errfn = errchoice.read_line(&mut input).unwrap();
+
+              //     match errfn {
+              //         1 => {
+              //             //display first error
+              //             display_first_error(vec![t_er]);
+              //             return false;
+              //         }
+              //         2 => {
+              //             //display all errors
+              //             display_all_errors(vec![t_er]);
+              //             return false;
+              //         }
+              //         3 => {
+              //             //display errors in chunks
+              //             format_error_alt(vec![t_er]);
+              //             return false;
+              //         }
+              //         _ => {
+              //             //display first error
+
+              //             return false;
+              //         }
+              //     }
+              // }
         }
     }
 
@@ -292,7 +353,20 @@ pub mod user_interaction {
         if res {
             println!("File exists, removing...");
 
-            let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+            let fp1 = file_path.clone();
+            let dvcs_hidden = loop_find(fp1);
+            if dvcs_hidden.is_none() {
+                println!("not a git repository (or any of the parent directories)");
+                return false;
+            }
+
+            let fp = file_path.clone();
+
+            let stager_i = Stager::new(
+                loop_find(file_path.clone()).unwrap().0.as_str(),
+                loop_find(file_path.clone()).unwrap().1.as_str(),
+            );
+
             if stager_i.is_err() {
                 let t_er = stager_i.unwrap_err();
                 display_first_error(vec![t_er]);
@@ -307,7 +381,8 @@ pub mod user_interaction {
                 return false;
             }
         }
-        return true;
+        display_first_error(vec!["file path not found".to_string()]);
+        return false;
     }
 
     pub fn add_in(file_path: String) -> bool {
@@ -315,7 +390,21 @@ pub mod user_interaction {
         if res {
             println!("File exists, adding...");
 
-            let stager_i = Stager::new("DVCS_HIDDEN", file_path.as_str());
+            let fp1 = file_path.clone();
+            let dvcs_hidden = loop_find(fp1);
+
+            if dvcs_hidden.is_none() {
+                println!("not a git repository (or any of the parent directories)");
+                return false;
+            }
+
+            let fp = file_path.clone();
+
+            let stager_i = Stager::new(
+                loop_find(file_path.clone()).unwrap().0.as_str(),
+                loop_find(file_path.clone()).unwrap().1.as_str(),
+            );
+
             if stager_i.is_err() {
                 let t_er = stager_i.unwrap_err();
                 display_first_error(vec![t_er]);
@@ -330,7 +419,7 @@ pub mod user_interaction {
                 return false;
             }
         }
-        return true;
+        return false;
     }
 
     pub fn see_diff_in(snapshot: &HashMap<String, String>) -> (HashMap<String, String>, bool) {
@@ -365,6 +454,8 @@ mod err_handling_tests {
 }
 
 mod user_interaction_tests {
+    use std::fs::File;
+
     use crate::user_interaction::add_in;
     use crate::user_interaction::diff_in;
     use crate::user_interaction::init_in;
@@ -381,35 +472,60 @@ mod user_interaction_tests {
     #[test]
     fn init_test_succ() {
         //create a valid path
-        let test_path = "/tmp/dvcs_test/";
-        let res = init_in(test_path.to_string());
+        std::fs::create_dir_all("./repo");
+        std::fs::create_dir_all("./repo/.dvcs_hidden");
+        File::create("./repo/text.txt".to_string());
+        let file_path = String::from("./repo");
+        let res = init_in(file_path.to_string());
         assert_eq!(res, true);
     }
     #[test]
     fn init_test_fail() {
         //create an invalid path
-        let test_path = "/tmp/dvcs_st";
-        let res = init_in(test_path.to_string());
+        std::fs::create_dir_all("./repo");
+        std::fs::create_dir_all("./repo/.dvcs_hidden");
+        File::create("./repo/text.txt".to_string());
+        let file_path = String::from("./dewdedewedwdeweddwe");
+        let res = init_in(file_path);
         assert_eq!(res, false);
     }
+    #[test]
 
+    fn diff_in_test() {
+        // std::fs::create_dir_all("./repo");
+        // std::fs::create_dir_all("./repo/.dvcs_hidden");
+        // File::create("./repo/text.txt".to_string());
+        // let file_path = String::from("./dewdedewedwdeweddwe");
+        // let res = diff_in(file_path.to_string(), "HEAD".to_string());
+        // assert_eq!(res, true);
+    }
     #[test]
     fn status_in_test() {
-        let test_path = "/tmp/dvcs_test/";
-        let res = status_in(test_path.to_string());
+        std::fs::create_dir_all("./repo");
+        std::fs::create_dir_all("./repo/.dvcs_hidden");
+        File::create("./repo/text.txt".to_string());
+        let file_path = String::from("./repo");
+        let res = status_in(file_path.to_string());
         assert_eq!(res, true);
     }
 
     #[test]
     fn remove_in_test() {
-        let test_path = "/tmp/dvcs_test/";
-        let res = remove_in(test_path.to_string());
+        std::fs::create_dir_all("./repo");
+        std::fs::create_dir_all("./repo/.dvcs_hidden");
+        File::create("./repo/text.txt".to_string());
+        let file_path = String::from("./repo");
+        let res = add_in(file_path.clone().to_string());
+        let res = remove_in(file_path.clone().to_string());
         assert_eq!(res, true);
     }
     #[test]
     fn add_in_test() {
-        let test_path = "/tmp/dvcs_test/";
-        let res = add_in(test_path.to_string());
+        std::fs::create_dir_all("./repo");
+        std::fs::create_dir_all("./repo/.dvcs_hidden");
+        File::create("./repo/text.txt".to_string());
+        let file_path = String::from("./repo");
+        let res = add_in(file_path.clone().to_string());
         assert_eq!(res, true);
     }
 }

@@ -1,9 +1,9 @@
 pub struct State {
     address: String,
-    contents: Vec<String>
+    contents: Vec<String>,
 }
 
-pub fn merge_states(ancestor: State, ours: State, theirs: State) -> (Vec<String>, Vec<String>){
+pub fn merge_states(ancestor: State, ours: State, theirs: State) -> (Vec<String>, Vec<String>) {
     //find similar elements between ancestor and ours, theirs
 
     let tup = find_same_diff(ancestor.contents.clone(), ours.contents.clone());
@@ -15,7 +15,7 @@ pub fn merge_states(ancestor: State, ours: State, theirs: State) -> (Vec<String>
     let deleted_theirs = tup.1;
 
     //find elements in diff_ours_ancestor that are not in ancestor but not in ours
-    //elements 
+    //elements
     let added_ours = find_added(ancestor.contents.clone(), ours.contents.clone());
     let added_theirs = find_added(ancestor.contents.clone(), theirs.contents.clone());
 
@@ -38,26 +38,23 @@ pub fn merge_states(ancestor: State, ours: State, theirs: State) -> (Vec<String>
     }
 
     return (to_be_added, to_be_merged);
-
 }
 
-
 //function that returns the elements that are the same between two vectors
-fn find_same_diff(a: Vec<String>, b:Vec<String>) -> (Vec<String>, Vec<String>) {
+fn find_same_diff(a: Vec<String>, b: Vec<String>) -> (Vec<String>, Vec<String>) {
     let mut same = Vec::new();
     let mut diff = Vec::new();
     for i in a {
         if b.contains(&i) {
             same.push(i);
-        }
-        else{
+        } else {
             diff.push(i);
         }
     }
     return (same, diff);
 }
 
-fn find_added(a: Vec<String>, b:Vec<String>) -> Vec<String> {
+fn find_added(a: Vec<String>, b: Vec<String>) -> Vec<String> {
     let mut added = Vec::new();
     for i in b {
         if !a.contains(&i) {
@@ -67,7 +64,6 @@ fn find_added(a: Vec<String>, b:Vec<String>) -> Vec<String> {
     return added;
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -76,10 +72,40 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let ancestor: State = State{address: "a".to_string(), contents: vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string()]};
-        let ours: State = State{address: "b".to_string(), contents: vec!["a".to_string(), "b".to_string(), "c".to_string(), "e".to_string()]};
-        let theirs: State = State{address: "c".to_string(), contents: vec!["a".to_string(), "b".to_string(), "c".to_string(), "f".to_string()]};
+        let ancestor: State = State {
+            address: "a".to_string(),
+            contents: vec![
+                "a".to_string(),
+                "b".to_string(),
+                "c".to_string(),
+                "d".to_string(),
+            ],
+        };
+        let ours: State = State {
+            address: "b".to_string(),
+            contents: vec![
+                "a".to_string(),
+                "b".to_string(),
+                "c".to_string(),
+                "e".to_string(),
+            ],
+        };
+        let theirs: State = State {
+            address: "c".to_string(),
+            contents: vec![
+                "a".to_string(),
+                "b".to_string(),
+                "c".to_string(),
+                "f".to_string(),
+            ],
+        };
 
-        assert_eq!(merge_states(ancestor, ours, theirs), (vec!["e".to_string()], vec!["f".to_string()]));
+        assert_eq!(
+            merge_states(ancestor, ours, theirs),
+            (
+                vec!["f".to_string()],
+                vec!["a".to_string(), "b".to_string(), "c".to_string()]
+            )
+        );
     }
 }
