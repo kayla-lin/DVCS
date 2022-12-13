@@ -80,7 +80,7 @@ pub mod stager {
                             let oth = other_.unwrap();
                             if sta.modified != oth.modified
                                 || sta.created != oth.created
-                                || sta.mode != oth.mode
+                                // || sta.mode != oth.mode
                                 || sta.sha1 != oth.sha1
                             {
                                 acc.push_str(staging_.clone().unwrap().path.as_str());
