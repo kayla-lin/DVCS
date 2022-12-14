@@ -17,7 +17,7 @@ pub mod staging_storage {
         // pub modified: String,
         // pub created: String,
         // pub accessed: String,
-        // pub read_only: String,
+        pub read_only: String,
         pub is_file: String,
         pub sha1: String,
     }
@@ -237,7 +237,7 @@ pub mod staging_storage {
             path: String,
         ) -> Result<StagedData, String> {
             return Ok(StagedData {
-                // read_only: metadata.permissions().readonly().to_string(),
+                read_only: metadata.permissions().readonly().to_string(),
                 is_file: metadata.is_file().to_string(),
                 // modified,
                 // created,
