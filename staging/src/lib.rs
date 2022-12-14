@@ -18,7 +18,7 @@ pub mod staging_storage {
         // pub created: String,
         // pub accessed: String,
         // pub read_only: String,
-        // pub is_file: String,
+        pub is_file: String,
         pub sha1: String,
     }
 
@@ -231,10 +231,14 @@ pub mod staging_storage {
         }
 
         /// Private helper function to get all useful metadata from file for indexing
-        fn create_staged_data_struct(sha1: String, path: String) -> Result<StagedData, String> {
+        fn create_staged_data_struct(
+            metadata: Metadata,
+            sha1: String,
+            path: String,
+        ) -> Result<StagedData, String> {
             return Ok(StagedData {
                 // read_only: metadata.permissions().readonly().to_string(),
-                // is_file: metadata.is_file().to_string(),
+                is_file: metadata.is_file().to_string(),
                 // modified,
                 // created,
                 // accessed,
@@ -292,6 +296,7 @@ pub mod staging_storage {
                         Ok(sha1_hex_encode) => {
                             // * Creating the struct with file path, metadata and sha1 hashed contents
                             if let Ok(created_data) = Self::create_staged_data_struct(
+                                metadata.clone(),
                                 sha1_hex_encode.clone(),
                                 file_path.to_string(),
                             ) {
@@ -304,6 +309,7 @@ pub mod staging_storage {
                                     })
                                     .or_insert({
                                         let data = match Self::create_staged_data_struct(
+                                            metadata.clone(),
                                             sha1_hex_encode.clone(),
                                             file_path.to_string(),
                                         ) {
