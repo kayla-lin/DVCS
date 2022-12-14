@@ -14,11 +14,11 @@ pub mod staging_storage {
     #[derive(Debug, Serialize, Deserialize, Clone)]
     pub struct StagedData {
         pub path: String,
-        pub modified: String,
-        pub created: String,
-        pub accessed: String,
-        pub read_only: String,
-        pub is_file: String,
+        // pub modified: String,
+        // pub created: String,
+        // pub accessed: String,
+        // pub read_only: String,
+        // pub is_file: String,
         pub sha1: String,
     }
 
@@ -231,30 +231,35 @@ pub mod staging_storage {
         }
 
         /// Private helper function to get all useful metadata from file for indexing
-        fn create_staged_data_struct(
-            metadata: Metadata,
-            sha1: String,
-            path: String,
-        ) -> Result<StagedData, String> {
-            let modified = Self::get_time_from_metadata(metadata.modified());
-            let created = Self::get_time_from_metadata(metadata.created());
-            let accessed = Self::get_time_from_metadata(metadata.accessed());
-            if let Ok(accessed) = accessed {
-                if let Ok(created) = created {
-                    if let Ok(modified) = modified {
-                        return Ok(StagedData {
-                            read_only: metadata.permissions().readonly().to_string(),
-                            is_file: metadata.is_file().to_string(),
-                            modified,
-                            created,
-                            accessed,
-                            sha1,
-                            path,
-                        });
-                    }
-                }
-            }
-            return Err("Could not get metadata from file".to_string());
+        fn create_staged_data_struct(sha1: String, path: String) -> Result<StagedData, String> {
+            return Ok(StagedData {
+                // read_only: metadata.permissions().readonly().to_string(),
+                // is_file: metadata.is_file().to_string(),
+                // modified,
+                // created,
+                // accessed,
+                sha1,
+                path,
+            });
+            // let modified = Self::get_time_from_metadata(metadata.modified());
+            // let created = Self::get_time_from_metadata(metadata.created());
+            // let accessed = Self::get_time_from_metadata(metadata.accessed());
+            // if let Ok(accessed) = accessed {
+            //     if let Ok(created) = created {
+            //         if let Ok(modified) = modified {
+            //             return Ok(StagedData {
+            //                 read_only: metadata.permissions().readonly().to_string(),
+            //                 is_file: metadata.is_file().to_string(),
+            //                 modified,
+            //                 created,
+            //                 accessed,
+            //                 sha1,
+            //                 path,
+            //             });
+            //         }
+            //     }
+            // }
+            // return Err("Could not get metadata from file".to_string());
         }
 
         /// Private helper function to convert file contents to sha1 hex hash
@@ -287,7 +292,6 @@ pub mod staging_storage {
                         Ok(sha1_hex_encode) => {
                             // * Creating the struct with file path, metadata and sha1 hashed contents
                             if let Ok(created_data) = Self::create_staged_data_struct(
-                                metadata.clone(),
                                 sha1_hex_encode.clone(),
                                 file_path.to_string(),
                             ) {
@@ -300,7 +304,6 @@ pub mod staging_storage {
                                     })
                                     .or_insert({
                                         let data = match Self::create_staged_data_struct(
-                                            metadata.clone(),
                                             sha1_hex_encode.clone(),
                                             file_path.to_string(),
                                         ) {

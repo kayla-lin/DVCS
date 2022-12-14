@@ -70,7 +70,7 @@ pub mod stager {
                 let update: String =
                     values
                         .iter()
-                        .fold(String::from("changed:\n"), |mut acc, val| {
+                        .fold(String::from("Tracking:\n"), |mut acc, val| {
                             let staging_ = val.staging.clone();
                             let other_ = val.working_directory.clone();
                             if staging_.is_none() || other_.is_none() {
@@ -78,12 +78,13 @@ pub mod stager {
                             }
                             let sta = staging_.clone().unwrap();
                             let oth = other_.unwrap();
-                            if sta.modified != oth.modified
-                                || sta.created != oth.created
-                                // || sta.mode != oth.mode
-                                || sta.sha1 != oth.sha1
-                            {
-                                acc.push_str(staging_.clone().unwrap().path.as_str());
+                            if sta.sha1 != oth.sha1 {
+                                let mod_str =
+                                    staging_.clone().unwrap().path + &"(modified)\n".to_string();
+                                acc.push_str(&mod_str);
+                            } else {
+                                let mod_str = staging_.clone().unwrap().path + &"\n".to_string();
+                                acc.push_str(&mod_str);
                             }
                             return acc;
                         });
